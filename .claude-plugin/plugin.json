@@ -11,6 +11,8 @@
     "./skills/engineering/tdd",
     "./skills/engineering/context",
     "./skills/engineering/code-review",
+    "./skills/engineering/frontend-design",
+    "./skills/engineering/dev-loop",
     "./skills/coordination/coordination-protocol"
   ],
   "commands": [],

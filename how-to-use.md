@@ -44,7 +44,7 @@ That's enough to get the **skills** (L1–L2). L3 (hooks/memory) and L4 (coordin
 | Layer | What it is | Where |
 |-------|-----------|-------|
 | **L1 Behavioral kernel** | One always-relevant coding-discipline skill | `skills/kernel/coding-behavior` |
-| **L2 Skills + authoring gate** | grill-me, diagnose, tdd, context, code-review + `write-a-skill` | `skills/engineering/*`, `skills/meta/*` |
+| **L2 Skills + authoring gate** | grill-me, diagnose, tdd, context, code-review, dev-loop, frontend-design + `write-a-skill` | `skills/engineering/*`, `skills/meta/*` |
 | **L3 Governance** | Install profiles, env-governed hooks, session memory, CI gate | `manifests/`, `hooks/`, `scripts/` |
 | **L4 Coordination** | Multi-agent task ledger + heartbeat runtime | `coordination/`, `skills/coordination/*` |
 
@@ -68,8 +68,8 @@ cp -r /path/to/mixture/skills/engineering/diagnose your-project/.claude/skills/
 as a Claude Code plugin (`/plugin`) if you host it in a marketplace.
 
 **Pick a subset with profiles** (`manifests/install-profiles.json`): `minimal` (kernel only), `dev` (kernel
-+ engineering), `authoring`, `coordination`, `full`. Install only the skills a profile lists to keep your
-context budget small.
++ engineering), `frontend` (dev loop + shadcn/ui design system), `authoring`, `coordination`, `full`.
+Install only the skills a profile lists to keep your context budget small.
 
 ### Using the skills
 Just work normally — Claude routes to a skill by its `description`. Or invoke explicitly by name:
@@ -80,6 +80,10 @@ Just work normally — Claude routes to a skill by its `description`. Or invoke 
 - **`tdd`** — vertical-slice red-green-refactor.
 - **`context`** — maintains a `CONTEXT.md` domain glossary (shared human↔agent vocabulary).
 - **`code-review`** — prioritized correctness/security findings with `file:line`, not style nits.
+- **`dev-loop`** — the delivery contract: tdd → full gate (tests/lint/typecheck) → code-review verdict,
+  looped until the greenzone (everything green + zero must-fix findings).
+- **`frontend-design`** — distinctive, production-grade UI (no generic "AI slop" aesthetics) executed
+  on the shadcn/ui system: CLI-added owned components, Radix accessibility, semantic tokens.
 
 ---
 

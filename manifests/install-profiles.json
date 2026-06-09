@@ -14,7 +14,18 @@
         "skills/engineering/diagnose",
         "skills/engineering/tdd",
         "skills/engineering/context",
-        "skills/engineering/code-review"
+        "skills/engineering/code-review",
+        "skills/engineering/dev-loop"
+      ]
+    },
+    "frontend": {
+      "description": "Frontend work: the dev loop (tdd + review) plus the shadcn/ui design system.",
+      "skills": [
+        "skills/kernel/coding-behavior",
+        "skills/engineering/tdd",
+        "skills/engineering/code-review",
+        "skills/engineering/dev-loop",
+        "skills/engineering/frontend-design"
       ]
     },
     "authoring": {
@@ -40,6 +51,8 @@
         "skills/engineering/tdd",
         "skills/engineering/context",
         "skills/engineering/code-review",
+        "skills/engineering/dev-loop",
+        "skills/engineering/frontend-design",
         "skills/meta/write-a-skill",
         "skills/coordination/coordination-protocol"
       ]

@@ -15,6 +15,8 @@
 - **Hidden bucket** — `in-progress/`, `deprecated/`, `personal/`: present in the repo, absent from `plugin.json` and READMEs.
 - **Eval** — a falsifiable test that a skill improves agent behavior. First-class; no skill ships without one.
 - **Coordination plane (L4)** — the deferred multi-agent layer: heartbeat, atomic checkout, blocker DAG, budgets. Specified, not built.
+- **Dev loop** — the `dev-loop` skill's delivery contract: tdd → full gate (tests/lint/typecheck) → code-review verdict, repeated until the greenzone.
+- **Greenzone** — the only valid "done" state for a dev task: full gate green **and** a code-review pass with zero must-fix findings.
 
 ## Relationships
 
