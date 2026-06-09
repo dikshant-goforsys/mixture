@@ -1,11 +1,20 @@
 {
-  "name": "mixture",
+  "name": "mixture-skills",
   "version": "0.1.0",
-  "private": true,
-  "description": "A deliberately-small, layered skills + agents framework for Claude Code.",
+  "description": "A deliberately-small, layered skills + agents framework for Claude Code. Install skills, session memory, and a multi-agent task runtime into any project.",
   "license": "MIT",
   "type": "module",
+  "keywords": [
+    "claude-code",
+    "claude",
+    "anthropic",
+    "agent-skills",
+    "ai-agents",
+    "coding-agent",
+    "mixture"
+  ],
   "bin": {
+    "mixture-skills": "bin/mixture.mjs",
     "mixture": "bin/mixture.mjs"
   },
   "files": [
@@ -28,6 +37,7 @@
     "hooks:resolve": "node scripts/resolve-hooks.mjs",
     "hooks:check": "node scripts/resolve-hooks.mjs --check",
     "test:coord": "node coordination/tests.mjs",
-    "ci": "npm run validate && npm run drift && npm run hooks:check && npm run test:coord"
+    "ci": "npm run validate && npm run drift && npm run hooks:check && npm run test:coord",
+    "prepublishOnly": "npm run ci"
   }
 }

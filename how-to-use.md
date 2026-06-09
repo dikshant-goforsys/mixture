@@ -190,6 +190,59 @@ Authoring tip: write the `SKILL.md` first, then register, then add the eval — 
 
 ---
 
+## Publishing to npm (for the maintainer)
+
+So that anyone can run `npx mixture-skills install …`. You publish from the framework repo; consumers never do.
+
+> The bare name `mixture` is already taken on npm, so this package is **`mixture-skills`** (the CLI still
+> answers to both `mixture-skills` and `mixture` once installed). `package.json` is already set up:
+> non-private, `bin` wired, `files` whitelist, and a `prepublishOnly` that runs `npm run ci` so a failing
+> gate blocks the publish.
+
+### One-time setup
+1. Create a free npm account at npmjs.com (enable 2FA — recommended).
+2. Log in on this machine (interactive — run it yourself):
+   ```bash
+   npm login
+   ```
+   Confirm with `npm whoami`.
+
+### Pre-flight (every release)
+```bash
+npm run ci              # gates must pass (prepublishOnly runs this again anyway)
+npm pack --dry-run      # inspect exactly what will ship — should be ~30 files, no .mixture/ state
+```
+
+### Publish
+```bash
+npm version patch       # 0.1.0 -> 0.1.1 (use minor/major as appropriate); commits + tags
+npm publish             # unscoped + public by default
+```
+Done. From any project, anyone can now:
+```bash
+npx mixture-skills install --profile dev
+```
+
+### Releasing updates
+Bump and publish again — consumers get the new version on their next `npx` (or `npx mixture-skills@latest`):
+```bash
+npm version patch && npm publish
+npx mixture-skills doctor   # consumers can re-run install to refresh
+```
+
+### If you prefer a scoped package
+Use `@<your-npm-username>/mixture` instead (scoped names are always free, namespaced to you):
+- set `"name": "@you/mixture"` in `package.json`, then `npm publish --access public`
+- consumers run `npx @you/mixture install …`
+
+### No npm at all (works today, zero setup)
+If the repo is on GitHub, skip publishing entirely:
+```bash
+npx github:<your-user>/<your-repo> install --profile dev
+```
+
+---
+
 ## Keep the philosophy (or it rots)
 
 Mixture's value is its discipline, not its size. If you adopt it, keep the guardrails:
