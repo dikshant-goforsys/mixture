@@ -1,0 +1,21 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      # No dependencies — run the gates directly. Each exits non-zero on failure.
+      - name: Validate routing contracts (frontmatter)
+        run: node scripts/validate-frontmatter.mjs
+      - name: Check catalog drift (registration, evals, cap)
+        run: node scripts/check-drift.mjs
+      - name: Resolve hooks for every profile
+        run: node scripts/resolve-hooks.mjs --check

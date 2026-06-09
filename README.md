@@ -26,7 +26,7 @@ This repo builds bottom-up. **L4 is specified, not implemented** — building or
 have a real fleet of agents to coordinate is the #1 documented failure mode (see `docs/premortem.md`).
 
 - ✅ **Phase 1 (now):** L0–L2 — the kernel skill, the `write-a-skill` quality gate, exemplar skills, validation.
-- 🔨 **Phase 2:** L3 — install profiles, minimal validated hooks, memory-persistence lifecycle.
+- 🔨 **Phase 2:** L3 — profiles, env-governed hooks (`resolve-hooks`), memory lifecycle, CI gate. _One item left: prompt-defense + model-routing reference._
 - 📋 **Phase 3 (spec'd):** L4 — coordination plane on Claude Code primitives. See `docs/coordination-plane.spec.md`.
 
 ## Layout
@@ -50,7 +50,8 @@ CONTEXT.md                        # domain glossary (dogfood)
 ## Quick start
 
 ```bash
-node scripts/validate-frontmatter.mjs   # gate: every SKILL.md has a valid routing contract
+npm run ci                              # full gate: routing contracts + catalog drift + hook profiles
+node scripts/resolve-hooks.mjs --explain   # see which hooks are active for your MIXTURE_HOOK_PROFILE
 ```
 
 See `docs/architecture.md` for the full design and exactly what was taken from each source repo.

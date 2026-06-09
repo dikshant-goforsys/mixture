@@ -44,5 +44,12 @@ instead of a bespoke control-plane runtime. See the spec.
 
 ## Enforce-in-code vs. prose
 Premortem #3 is that all four encode invariants in Markdown the model may ignore. Mixture pushes every
-checkable invariant into code: `validate-frontmatter.mjs` (routing contract), a no-drift check, and the
-hook profiles. Prose is guidance; code is the guarantee.
+checkable invariant into code, all wired into CI (`.github/workflows/ci.yml`) and exiting `2` on failure
+so they double as Claude Code hooks:
+- `scripts/validate-frontmatter.mjs` — the routing contract (name kebab-case + matches dir; description ≤1024 + has "Use when").
+- `scripts/check-drift.mjs` — the `write-a-skill` gate's machine-checkable rules: shipped⇄disk parity,
+  every shipped skill in ≥1 profile, **every shipped skill has an eval** (premortem #9), and the **~30 cap** (premortem #1).
+- `scripts/resolve-hooks.mjs` — L3 governance: resolves the annotated `hooks.json` by `MIXTURE_HOOK_PROFILE`
+  (off/standard/strict) and `MIXTURE_DISABLED_HOOKS`, so behavior is tuned by env, never by editing files.
+
+Prose is guidance; code is the guarantee.

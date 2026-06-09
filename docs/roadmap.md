@@ -15,9 +15,9 @@ next begins. **You do not skip ahead to L4.**
 
 ## Phase 2 — L3 governance
 - [x] Implement `memory-persistence/{load,save,clean}.mjs` against the contract (idempotent, bounded, pin-safe)
-- [ ] Wire `MIXTURE_HOOK_PROFILE` env governance + CI validation of `hooks.json`
-- [ ] Add the prompt-defense preamble + cost-aware model-routing reference
-- [ ] CI: run `validate-frontmatter.mjs` + a no-drift check on every PR
+- [x] Wire `MIXTURE_HOOK_PROFILE` env governance (`resolve-hooks.mjs`: off/standard/strict + `MIXTURE_DISABLED_HOOKS`)
+- [x] CI (`.github/workflows/ci.yml`): `validate-frontmatter` + `check-drift` (registration/eval/cap) + `resolve-hooks --check`
+- [ ] Add the prompt-defense preamble + cost-aware model-routing reference _(last Phase 2 item)_
 
 ## Phase 3 — L4 coordination (only when the gate in the spec is met)
 - [ ] Manual task ledger proves the workflow first

@@ -6,8 +6,17 @@
         "_name": "validate-skill-frontmatter",
         "_profile": "standard",
         "matcher": "Write|Edit",
-        "command": "node scripts/validate-frontmatter.mjs --changed",
-        "_note": "Blocks (exit 2) when a touched SKILL.md violates the routing contract. Skipped unless MIXTURE_HOOK_PROFILE>=standard."
+        "command": "node scripts/validate-frontmatter.mjs",
+        "_note": "Blocks (exit 2) when a SKILL.md violates the routing contract. Active at standard+."
+      }
+    ],
+    "PostToolUse": [
+      {
+        "_name": "check-manifest-drift",
+        "_profile": "strict",
+        "matcher": "Write|Edit",
+        "command": "node scripts/check-drift.mjs",
+        "_note": "Strict only: after edits, verify every skill stays registered in plugin.json + a profile, has an eval, and the catalog is under the cap."
       }
     ],
     "SessionStart": [

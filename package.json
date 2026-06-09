@@ -1,0 +1,18 @@
+{
+  "name": "mixture",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A deliberately-small, layered skills + agents framework for Claude Code.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "validate": "node scripts/validate-frontmatter.mjs",
+    "drift": "node scripts/check-drift.mjs",
+    "hooks:resolve": "node scripts/resolve-hooks.mjs",
+    "hooks:check": "node scripts/resolve-hooks.mjs --check",
+    "ci": "npm run validate && npm run drift && npm run hooks:check"
+  }
+}
