@@ -55,6 +55,12 @@ for await (const file of walk(SKILLS_DIR)) {
     if (!/use when/i.test(fm.description))
       errors.push(`${where}: description should contain "Use when [triggers]" so the model can route to it`);
   }
+
+  // Optional fields (Agent Skills spec): validate only when present.
+  if (fm["disable-model-invocation"] !== undefined && !/^(true|false)$/.test(fm["disable-model-invocation"]))
+    errors.push(`${where}: 'disable-model-invocation' must be true or false (got "${fm["disable-model-invocation"]}")`);
+  if (fm["allowed-tools"] !== undefined && fm["allowed-tools"] === "")
+    errors.push(`${where}: 'allowed-tools' is present but empty — remove it or list tools`);
 }
 
 if (errors.length) {

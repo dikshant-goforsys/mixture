@@ -1,6 +1,7 @@
 ---
 name: code-review
 description: Review a diff for correctness, security, and simplicity before it merges. Use when reviewing a pull request, staged changes, or your own completed work. Focuses on real defects and reuse/simplification, not style nits. Skip for trivial one-line or generated changes.
+allowed-tools: Read, Grep, Glob, Bash(git diff:*), Bash(git log:*), Bash(git show:*), Bash(git status:*)
 license: MIT
 ---
 

@@ -40,6 +40,12 @@ function findSkillDirs(dir, acc = []) {
 
 const plugin = readJSON(".claude-plugin/plugin.json");
 const profiles = readJSON("manifests/install-profiles.json");
+const pkg = readJSON("package.json");
+
+// Release rule (CLAUDE.md): plugin.json version tracks package.json. SOFT because the two
+// edits are legitimately sequential mid-bump; fatal in CI like every completeness gap.
+if (plugin && pkg && plugin.version !== pkg.version)
+  soft.push(`version drift: package.json is ${pkg.version} but plugin.json is ${plugin.version} — bump them together`);
 
 if (plugin) {
   const shipped = (plugin.skills || []).map(norm);

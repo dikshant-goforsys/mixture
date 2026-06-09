@@ -19,6 +19,13 @@ The model sees **only** the description when deciding to invoke. It must:
 ❌ `description: Helps with testing.`
 ✅ `description: Test-driven development via red-green-refactor on vertical slices. Use when building a feature or fixing a bug where behavior can be expressed as a failing test; skip for pure refactors.`
 
+**Optional frontmatter** (use deliberately, not by default):
+- `allowed-tools` — **pre-approves** the listed tools while the skill is active (no permission
+  prompts). It does *not* restrict other tools. Use for skills with a known, safe tool footprint —
+  e.g. `code-review` pre-approves read-only inspection (`Read, Grep, Glob, Bash(git diff:*)`).
+- `disable-model-invocation: true` — the skill never auto-fires; only explicit `/name` invokes it.
+  Use only for manual-only workflows. Default stays `false`: description-based routing **is** the design.
+
 ## 2. Progressive disclosure
 - `SKILL.md` body ≤ ~100 lines. If longer, split into `references/*.md` loaded **one level deep**.
 - Add `scripts/` only for **deterministic** operations that save tokens (parsing, validation) — not for prose.
