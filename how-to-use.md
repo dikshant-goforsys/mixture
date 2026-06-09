@@ -71,6 +71,23 @@ as a Claude Code plugin (`/plugin`) if you host it in a marketplace.
 + engineering), `frontend` (dev loop + shadcn/ui design system), `authoring`, `coordination`, `full`.
 Install only the skills a profile lists to keep your context budget small.
 
+### Upgrading
+
+Re-run your original install command with `@latest` pinned and `--force` added:
+
+```bash
+npx mixture-skills@latest install --profile full --with-memory --memory-backend sqlite --with-coordination --force
+npx mixture-skills@latest doctor    # verify, then restart Claude Code (or /reload-skills)
+```
+
+- **`@latest`** — plain `npx mixture-skills` may run a stale cached version; pinning forces the registry one.
+- **`--force`** — without it, anything already installed is skipped. With it, skills and the
+  `.mixture/framework/*` runtimes are **replaced** (not merged), so files removed upstream don't linger.
+- **Your data survives**: `.mixture/memory/store.*` and `.mixture/coordination/ledger.json` live outside
+  the replaced directories. Hook wiring in `.claude/settings.json` is upgrade-safe (idempotent re-run;
+  backend switches update the command in place, with a `settings.json.bak` written).
+- Installed with `--link`? Just `git pull` your clone — the symlinks pick up changes, no reinstall.
+
 ### Using the skills
 Just work normally — Claude routes to a skill by its `description`. Or invoke explicitly by name:
 - **`coding-behavior`** (kernel) — fires on real coding tasks; biases toward asking before assuming,

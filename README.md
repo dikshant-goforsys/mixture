@@ -59,6 +59,13 @@ npx mixture-skills list | doctor                                      # profiles
 # (or pin from source: `npx github:dikshant-goforsys/mixture install …`)
 ```
 
+**Upgrade an existing install** — re-run your install command with `@latest` + `--force`
+(replaces skills and `.mixture/framework/*` runtimes; your memory store and task ledger are untouched):
+```bash
+npx mixture-skills@latest install --profile full --with-memory --memory-backend sqlite --with-coordination --force
+npx mixture-skills@latest doctor    # verify, then restart Claude Code (or /reload-skills)
+```
+
 **Develop the framework itself:**
 ```bash
 npm run ci                              # full gate: routing contracts + catalog drift + hooks + L4 tests
