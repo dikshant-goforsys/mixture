@@ -28,6 +28,10 @@ invariants in code (`coordination/ledger.mjs`); your job is to honor the behavio
    needs a second pair of eyes.
 7. **Delegate, don't poll.** Need other work first? `create` a child/blocker task and `block --id <T> --by <child>`
    — **prefer child tasks over busy-waiting.** The dependent auto-wakes when blockers clear.
+8. **Human gate for irreversible/ambiguous calls.** `ask --id <T> --kind request_confirmation --prompt "..."
+   --key <idempotent-key>` then exit. The task leaves the ready set until a human `resolve`s it, which wakes
+   you. Reuse the same `--key` on resume so you never double-ask; if the plan was revised, the old gate goes
+   stale and you re-ask. (Kernel Principle 1, made durable across heartbeats.)
 
 ## Example
 

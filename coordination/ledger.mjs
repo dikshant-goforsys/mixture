@@ -10,7 +10,7 @@
 //     auto-resumes dependents and queues exactly one wake. Same for parent on all-children-done.
 //   - Liveness: an in_progress task whose run went stale is released + gets exactly one recovery wake.
 
-import { mkdirSync, readFileSync, writeFileSync, existsSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync, existsSync, rmdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 export const DIR = process.env.MIXTURE_COORD_DIR || join(process.cwd(), ".mixture", "coordination");
@@ -33,13 +33,17 @@ export class LedgerError extends Error {
 }
 
 export function newLedger() {
-  return { version: 1, nextId: 1, budget: { cap: null, spent: 0 }, tasks: {}, wakes: [] };
+  return { version: 1, nextId: 1, nextIid: 1, budget: { cap: null, spent: 0 }, tasks: {}, wakes: [], interactions: [] };
 }
 
 export function load() {
   if (!existsSync(STORE)) return newLedger();
-  try { return JSON.parse(readFileSync(STORE, "utf8")); }
+  let L;
+  try { L = JSON.parse(readFileSync(STORE, "utf8")); }
   catch { return newLedger(); }
+  // normalize older ledgers so new fields are always present
+  L.wakes ||= []; L.interactions ||= []; L.nextIid ||= 1;
+  return L;
 }
 
 export function save(L) {
@@ -48,12 +52,31 @@ export function save(L) {
   return L;
 }
 
+// Cross-process mutex so concurrent agents' read-modify-write can't lose updates.
+// mkdir is atomic; a stale lock (crashed holder) is reclaimed after staleMs.
+function sleepSync(ms) { Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms); }
+export function withLock(fn, { timeoutMs = 5000, staleMs = 15000 } = {}) {
+  const lock = join(DIR, ".lock");
+  mkdirSync(DIR, { recursive: true });
+  const start = Date.now();
+  for (;;) {
+    try { mkdirSync(lock); break; }
+    catch (e) {
+      if (e.code !== "EEXIST") throw e;
+      try { if (Date.now() - statSync(lock).mtimeMs > staleMs) { rmdirSync(lock); continue; } } catch { /* race: retry */ }
+      if (Date.now() - start > timeoutMs) throw new LedgerError("LOCK", "ledger busy — try again");
+      sleepSync(25);
+    }
+  }
+  try { return fn(); } finally { try { rmdirSync(lock); } catch { /* already gone */ } }
+}
+
 export function createTask(L, { title, priority = 1, parent = null, status = "todo" }, now = Date.now()) {
   if (!title) throw new LedgerError("USAGE", "task needs a title");
   const id = `T-${L.nextId++}`;
   const task = {
     id, title, status, priority, parent,
-    assignee: null, blockedBy: [],
+    assignee: null, blockedBy: [], revision: 1,
     checkoutRunId: null, executionRunId: null, lastHeartbeatTs: null,
     cost: 0, createdTs: now, updatedTs: now,
   };
@@ -201,6 +224,7 @@ export function livenessScan(L, ttlMs, now = Date.now()) {
 export function getReady(L, agent = null) {
   return Object.values(L.tasks)
     .filter((t) => {
+      if (hasPendingInteraction(L, t.id)) return false; // waiting on a human gate
       if (t.status === "in_progress") return agent && t.assignee === agent; // resume own work
       if (t.status === "in_review" || t.status === "todo") return !blockersUnresolved(L, t);
       return false;
@@ -213,4 +237,54 @@ export function getReady(L, agent = null) {
 
 export function takeWake(L) {
   return L.wakes.shift() || null;
+}
+
+// --- Typed human-in-the-loop gates (paperclip pattern): structured, idempotent, revision-bound.
+const KINDS = ["request_confirmation", "request_checkbox_confirmation", "ask_user_questions", "suggest_tasks"];
+
+// Idempotent by idempotencyKey: requesting the same gate twice returns the same interaction, never a
+// duplicate (so a resumed/retried agent can't spam the user). Bound to the task's current revision.
+export function requestInteraction(L, { taskId, kind, prompt, options = [], idempotencyKey, targetRevision = null }, now = Date.now()) {
+  L.interactions ||= []; L.nextIid ||= 1;
+  if (!KINDS.includes(kind)) throw new LedgerError("USAGE", `bad interaction kind "${kind}"`);
+  if (!idempotencyKey) throw new LedgerError("USAGE", "interaction needs an idempotencyKey");
+  const t = get(L, taskId);
+  const existing = L.interactions.find((i) => i.idempotencyKey === idempotencyKey && i.status !== "stale");
+  if (existing) return existing; // idempotent: no duplicate gate
+  const it = {
+    id: `I-${L.nextIid++}`, taskId, kind, prompt, options, idempotencyKey,
+    targetRevision: targetRevision ?? t.revision ?? 1,
+    status: "pending", response: null, createdTs: now, resolvedTs: null,
+  };
+  L.interactions.push(it);
+  return it;
+}
+
+// Idempotent resolve: re-resolving a resolved gate is a no-op; resolving a stale one is rejected.
+export function resolveInteraction(L, id, response, now = Date.now()) {
+  L.interactions ||= [];
+  const it = L.interactions.find((i) => i.id === id);
+  if (!it) throw new LedgerError("USAGE", `interaction ${id} not found`);
+  if (it.status === "resolved") return it;
+  if (it.status === "stale") throw new LedgerError("STALE", `interaction ${id} is stale (target was revised) — re-ask`);
+  it.status = "resolved"; it.response = response; it.resolvedTs = now;
+  queueWake(L, it.taskId, "interaction_resolved", now); // continuation policy: wake the assignee
+  return it;
+}
+
+export function pendingInteractions(L, taskId = null) {
+  return (L.interactions || []).filter((i) => i.status === "pending" && (!taskId || i.taskId === taskId));
+}
+export const hasPendingInteraction = (L, taskId) => pendingInteractions(L, taskId).length > 0;
+
+// Bumping a task's revision supersedes pending gates bound to the old revision (stale_target):
+// a resumed agent won't act on answers to a question about an outdated plan.
+export function bumpRevision(L, taskId, now = Date.now()) {
+  const t = get(L, taskId);
+  t.revision = (t.revision || 1) + 1;
+  t.updatedTs = now;
+  for (const i of (L.interactions || [])) {
+    if (i.taskId === taskId && i.status === "pending" && i.targetRevision < t.revision) i.status = "stale";
+  }
+  return t;
 }

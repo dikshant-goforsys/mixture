@@ -18,13 +18,16 @@
 
 import * as L from "./ledger.mjs";
 
-const CODE = { USAGE: 2, CYCLE: 6, BUDGET: 7, BLOCKED: 8, CONFLICT: 9, TRANSITION: 2 };
+const CODE = { USAGE: 2, LOCK: 3, STALE: 5, CYCLE: 6, BUDGET: 7, BLOCKED: 8, CONFLICT: 9, TRANSITION: 2 };
 const argv = process.argv.slice(2);
 const cmd = argv[0];
 const flag = (n, d) => { const i = argv.indexOf(n); return i !== -1 && i + 1 < argv.length ? argv[i + 1] : d; };
 const out = (o) => process.stdout.write(JSON.stringify(o, null, 2) + "\n");
 
 function run() {
+  // Every command runs under the cross-process lock so concurrent agents serialize their
+  // read-modify-write — the atomic-checkout guarantee holds across processes, not just in-process.
+  return L.withLock(() => {
   const l = L.load();
   switch (cmd) {
     case "create": {
@@ -55,10 +58,21 @@ function run() {
       return out({ recovered: rec, wakes: l.wakes });
     }
     case "tick": return tick(l);
+    case "ask": {
+      const it = L.requestInteraction(l, {
+        taskId: flag("--id"), kind: flag("--kind", "request_confirmation"), prompt: flag("--prompt"),
+        options: flag("--options") ? flag("--options").split(",") : [], idempotencyKey: flag("--key"),
+      });
+      L.save(l); return out({ interaction: it.id, kind: it.kind, status: it.status, targetRevision: it.targetRevision });
+    }
+    case "resolve": { const it = L.resolveInteraction(l, flag("--iid"), flag("--response")); L.save(l); return out({ resolved: it.id, response: it.response, wakes: l.wakes }); }
+    case "interactions": return out(L.pendingInteractions(l, flag("--id", null)));
+    case "revise": { const t = L.bumpRevision(l, flag("--id")); L.save(l); return out({ id: t.id, revision: t.revision }); }
     default:
       console.error("unknown command. see header for usage.");
       process.exit(CODE.USAGE);
   }
+  });
 }
 
 // One heartbeat: budget gate -> liveness recovery -> scoped wake or top ready -> atomic checkout -> dispatch.

@@ -95,5 +95,31 @@ function throws(code, fn, msg) {
   ok(ready.indexOf(t2.id) < ready.indexOf(t1.id), "within todo, higher priority first");
 }
 
+// --- typed human-in-the-loop gates: idempotent request + resolve + getReady exclusion
+{
+  const l = L.newLedger();
+  const a = L.createTask(l, { title: "A" }, 100);
+  const i1 = L.requestInteraction(l, { taskId: a.id, kind: "request_confirmation", prompt: "Ship it?", idempotencyKey: "ship:A:r1" }, 101);
+  const i2 = L.requestInteraction(l, { taskId: a.id, kind: "request_confirmation", prompt: "Ship it?", idempotencyKey: "ship:A:r1" }, 102);
+  ok(i1.id === i2.id && l.interactions.length === 1, "duplicate idempotencyKey -> same gate, no dup");
+  ok(L.getReady(l, "ag").length === 0, "task with a pending gate is not ready");
+  const r = L.resolveInteraction(l, i1.id, "yes", 103);
+  ok(r.status === "resolved" && l.wakes.some((w) => w.taskId === a.id && w.reason === "interaction_resolved"), "resolve sets response + queues wake");
+  const r2 = L.resolveInteraction(l, i1.id, "no", 104);
+  ok(r2.response === "yes", "re-resolve is a no-op (idempotent)");
+  ok(L.getReady(l, "ag").length === 1, "task is ready again once the gate resolves");
+}
+
+// --- gate goes stale when its target revision is superseded
+{
+  const l = L.newLedger();
+  const a = L.createTask(l, { title: "A" });
+  const i = L.requestInteraction(l, { taskId: a.id, kind: "ask_user_questions", prompt: "Which DB?", options: ["pg", "sqlite"], idempotencyKey: "db:A:r1" });
+  L.bumpRevision(l, a.id);
+  ok(l.interactions.find((x) => x.id === i.id).status === "stale", "bumpRevision marks old-revision gate stale");
+  throws("STALE", () => L.resolveInteraction(l, i.id, "pg"), "resolving a stale gate -> STALE");
+  ok(L.getReady(l, "ag").length === 1, "stale gate no longer blocks readiness");
+}
+
 console.log(`coordination ledger: ${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
