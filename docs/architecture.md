@@ -22,8 +22,9 @@ buckets + hidden buckets; examples-as-docs; `write-a-skill` as a gate; grill-me 
 **Rejected:** TypeScript-specific skills (migrate-to-shoehorn, scaffold-exercises) — config, not catalog.
 
 ### L3 — affaan-m/ECC → `manifests/`, `hooks/` (scoped to ~1/10th)
-**Taken:** profile-based selective install; cost-aware model routing; prompt-defense preamble;
-env-var hook governance; memory-persistence lifecycle (SessionStart/PreCompact/SessionEnd).
+**Taken:** profile-based selective install; cost-aware model routing (`references/model-routing.md`);
+prompt-defense preamble (`references/prompt-defense.md`); env-var hook governance; memory-persistence
+lifecycle (SessionStart/PreCompact/SessionEnd).
 **Rejected, emphatically:** the 261-skill / 64-agent sprawl; the 50KB hooks.json; the cross-harness
 dotfolders; inflated stats as proof. ECC is the cautionary tale that justifies the cap.
 
