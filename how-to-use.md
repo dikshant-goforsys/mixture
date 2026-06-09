@@ -13,11 +13,11 @@ is in this repo and tested.
 From inside the project you want to add Mixture to:
 
 ```bash
-# straight from GitHub (works now):
-npx github:dikshant-goforsys/mixture install --profile dev
-
-# or, once published to npm:
+# from npm (published):
 npx mixture-skills install --profile dev
+
+# or pin straight from source:
+npx github:dikshant-goforsys/mixture install --profile dev
 ```
 
 Common variants:

@@ -53,9 +53,10 @@ CONTEXT.md                        # domain glossary (dogfood)
 
 **Use it in another project** (installer CLI — see `how-to-use.md`):
 ```bash
-npx github:dikshant-goforsys/mixture install --profile dev    # skills into .claude/skills
-npx github:dikshant-goforsys/mixture install --profile full --with-memory --with-coordination
-# (once published to npm: `npx mixture-skills install …`)
+npx mixture-skills install --profile dev                              # skills into .claude/skills
+npx mixture-skills install --profile full --with-memory --memory-backend sqlite
+npx mixture-skills list | doctor                                      # profiles / what's installed
+# (or pin from source: `npx github:dikshant-goforsys/mixture install …`)
 ```
 
 **Develop the framework itself:**

@@ -132,7 +132,7 @@ function list() {
     for (const s of p.skills) console.log(`  ${" ".repeat(13)}  · ${basename(s)}`);
     console.log("");
   }
-  console.log("  install: npx mixture install --profile <name> [--with-memory] [--with-coordination]\n");
+  console.log("  install: npx mixture-skills install --profile <name> [--with-memory] [--with-coordination]\n");
 }
 
 function doctor() {
@@ -166,10 +166,10 @@ function help() {
 Mixture — a layered skills + agents framework for Claude Code
 
 Usage:
-  npx mixture install [options]   install skills (and optionally runtimes) into a project
-  npx mixture list                show install profiles and their skills
-  npx mixture doctor              check what's installed in a project
-  npx mixture guide [--print]     locate or print how-to-use.md
+  npx mixture-skills install [options]   install skills (and optionally runtimes) into a project
+  npx mixture-skills list                show install profiles and their skills
+  npx mixture-skills doctor              check what's installed in a project
+  npx mixture-skills guide [--print]     locate or print how-to-use.md
 
 install options:
   --profile <name>      minimal | dev (default) | authoring | coordination | full
@@ -183,9 +183,9 @@ install options:
   --dry-run             print actions, change nothing
 
 Examples:
-  npx mixture install --profile dev
-  npx mixture install --profile full --with-memory --with-coordination
-  npx mixture install --global --link        # for hacking on a cloned repo
+  npx mixture-skills install --profile dev
+  npx mixture-skills install --profile full --with-memory --memory-backend sqlite
+  npx mixture-skills install --global --link        # for hacking on a cloned repo
 `);
 }
 
