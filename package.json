@@ -5,6 +5,20 @@
   "description": "A deliberately-small, layered skills + agents framework for Claude Code.",
   "license": "MIT",
   "type": "module",
+  "bin": {
+    "mixture": "bin/mixture.mjs"
+  },
+  "files": [
+    "bin",
+    "skills",
+    "scripts",
+    "hooks",
+    "manifests",
+    "references",
+    "coordination",
+    "how-to-use.md",
+    "README.md"
+  ],
   "engines": {
     "node": ">=18"
   },

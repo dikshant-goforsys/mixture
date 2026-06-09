@@ -8,22 +8,31 @@ is in this repo and tested.
 
 ---
 
-## TL;DR — fastest path
+## TL;DR — install with the CLI
+
+From inside the project you want to add Mixture to:
 
 ```bash
-# 1. Make the skills available to Claude Code globally (symlink each skill dir)
-for d in /path/to/mixture/skills/*/*/; do
-  [ -f "$d/SKILL.md" ] && ln -sfn "$d" "$HOME/.claude/skills/$(basename "$d")"
-done
-
-# 2. (optional) copy the L3/L4 tooling into your project if you want hooks/coordination
-cp -r /path/to/mixture/{scripts,hooks,manifests,coordination,references} your-project/
-
-# 3. Verify everything is wired
-cd your-project && node /path/to/mixture/scripts/validate-frontmatter.mjs
+# published to npm:                or, straight from the repo:
+npx mixture install --profile dev      npx github:<you>/mixture install --profile dev
 ```
 
-That's enough to get the **skills** (L1–L2). L3 (hooks/memory) and L4 (coordination) are opt-in — see below.
+Common variants:
+```bash
+npx mixture list                                  # show profiles and their skills
+npx mixture install --profile full --with-memory --with-coordination
+npx mixture doctor                                # check what's installed here
+npx mixture install --global --link               # symlink into ~/.claude/skills (dev on a clone)
+```
+
+This installs skills into `<project>/.claude/skills/` (or `~/.claude/skills` with `--global`), and with
+the flags also drops the memory/coordination runtimes under `<project>/.mixture/framework/` and wires the
+memory hooks into `.claude/settings.json` (backed up first; re-running is idempotent). Then restart Claude
+Code or `/reload-skills`.
+
+> **Manual alternative** (no CLI): `cp -r /path/to/mixture/skills/<bucket>/<skill> your-project/.claude/skills/`.
+
+That's enough to get the **skills** (L1–L2). L3 (hooks/memory) and L4 (coordination) are opt-in flags — details below.
 
 ---
 

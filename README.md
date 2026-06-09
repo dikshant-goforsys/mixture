@@ -32,6 +32,7 @@ have a real fleet of agents to coordinate is the #1 documented failure mode (see
 ## Layout
 
 ```
+bin/mixture.mjs                   # the `npx mixture` installer CLI
 .claude-plugin/plugin.json        # manifest (L0)
 skills/
   kernel/coding-behavior/         # L1 — the ONE behavioral skill
@@ -50,8 +51,16 @@ CONTEXT.md                        # domain glossary (dogfood)
 
 ## Quick start
 
+**Use it in another project** (installer CLI — see `how-to-use.md`):
 ```bash
-npm run ci                              # full gate: routing contracts + catalog drift + hook profiles
+npx mixture install --profile dev                 # skills into .claude/skills
+npx mixture install --profile full --with-memory --with-coordination
+npx mixture list | doctor                         # profiles / what's installed
+```
+
+**Develop the framework itself:**
+```bash
+npm run ci                              # full gate: routing contracts + catalog drift + hooks + L4 tests
 node scripts/resolve-hooks.mjs --explain   # see which hooks are active for your MIXTURE_HOOK_PROFILE
 ```
 
