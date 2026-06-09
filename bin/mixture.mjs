@@ -50,7 +50,7 @@ function copyDir(src, dest, { dry, force }) {
   log(`copied ${basename(src)} runtime -> ${dest.replace(process.cwd() + "/", "")}`);
 }
 
-function wireMemoryHooks(target, { dry }) {
+function wireMemoryHooks(target, { dry, backend = "json" }) {
   const settingsPath = join(target, ".claude/settings.json");
   let settings = {};
   if (existsSync(settingsPath)) {
@@ -58,6 +58,7 @@ function wireMemoryHooks(target, { dry }) {
     catch { warn(".claude/settings.json is invalid JSON — skipping hook wiring"); return; }
   }
   settings.hooks ||= {};
+  const env = backend === "sqlite" ? "MIXTURE_MEMORY_BACKEND=sqlite " : "";
   const add = (event, command) => {
     settings.hooks[event] ||= [];
     if (JSON.stringify(settings.hooks[event]).includes(command)) return false; // idempotent
@@ -65,9 +66,9 @@ function wireMemoryHooks(target, { dry }) {
     return true;
   };
   const added = [
-    add("SessionStart", "node .mixture/framework/memory/load.mjs"),
-    add("PreCompact", "node .mixture/framework/memory/save.mjs"),
-    add("SessionEnd", "node .mixture/framework/memory/clean.mjs"),
+    add("SessionStart", `${env}node .mixture/framework/memory/load.mjs`),
+    add("PreCompact", `${env}node .mixture/framework/memory/save.mjs`),
+    add("SessionEnd", `${env}node .mixture/framework/memory/clean.mjs`),
   ].filter(Boolean).length;
   if (dry) { log(`would wire ${added} memory hook(s) into .claude/settings.json`); return; }
   mkdirSync(dirname(settingsPath), { recursive: true });
@@ -103,8 +104,11 @@ function install() {
   }
 
   if (has("--with-memory")) {
+    const backend = opt("--memory-backend", "json").toLowerCase();
+    if (!["json", "sqlite"].includes(backend)) die(`--memory-backend must be "json" or "sqlite" (got "${backend}")`);
     copyDir(join(PKG_ROOT, "hooks/memory-persistence"), join(target, ".mixture/framework/memory"), { dry, force });
-    wireMemoryHooks(target, { dry });
+    wireMemoryHooks(target, { dry, backend });
+    if (backend === "sqlite") log("memory backend: sqlite (consumer needs Node >=22; zero extra deps)");
   }
   if (withCoord) {
     copyDir(join(PKG_ROOT, "coordination"), join(target, ".mixture/framework/coordination"), { dry, force });
@@ -173,6 +177,7 @@ install options:
   --global              install skills into ~/.claude/skills (all projects)
   --link                symlink skills instead of copying (for local dev clones)
   --with-memory         install the session-memory runtime + wire its hooks
+  --memory-backend <b>  json (default) or sqlite (zero-dep, needs Node >=22 on the consumer)
   --with-coordination   install the L4 task-ledger runtime + the coordination-protocol skill
   --force               overwrite skills/runtimes that already exist
   --dry-run             print actions, change nothing

@@ -102,7 +102,15 @@ Control behavior with env vars — no file edits:
 To wire into Claude Code, put the resolved output's `hooks` into your project `.claude/settings.json`.
 
 ### Session memory (survives compaction)
-Durable facts live outside the context window in `.mixture/memory/store.json`:
+Durable facts live outside the context window. **Two backends**, selected by `MIXTURE_MEMORY_BACKEND`:
+- `json` (default) — a single `.mixture/memory/store.json`; works on Node ≥ 18.
+- `sqlite` — a local `.mixture/memory/store.db` via the **built-in `node:sqlite`** (zero extra deps; needs Node ≥ 22).
+
+Install with SQLite wired into the hooks:
+```bash
+npx github:dikshant-goforsys/mixture install --profile dev --with-memory --memory-backend sqlite
+```
+The CLI is backend-agnostic — same commands either way:
 ```bash
 # add a durable fact (or wire as a tool the agent calls)
 node hooks/memory-persistence/save.mjs --add "Chose Postgres over SQLite for multi-writer support" --type decision --pin
@@ -186,6 +194,7 @@ Authoring tip: write the `SKILL.md` first, then register, then add the eval — 
 | `MIXTURE_HOOK_PROFILE` | `standard` | `off`/`standard`/`strict` — which hooks are active |
 | `MIXTURE_DISABLED_HOOKS` | (none) | comma-separated hook names to disable |
 | `MIXTURE_MEMORY_DIR` | `.mixture/memory` | memory store location |
+| `MIXTURE_MEMORY_BACKEND` | `json` | `json` or `sqlite` (sqlite needs Node ≥ 22, zero extra deps) |
 | `MIXTURE_MEMORY_LOAD_LIMIT` | `50` | max entries injected at SessionStart |
 | `MIXTURE_MEMORY_MAX` / `MIXTURE_MEMORY_TTL_DAYS` | `200` / `90` | memory bound |
 | `MIXTURE_COORD_DIR` | `.mixture/coordination` | task ledger location |

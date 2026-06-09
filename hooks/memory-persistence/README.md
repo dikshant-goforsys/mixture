@@ -23,8 +23,12 @@ node hooks/memory-persistence/load.mjs    # SessionStart: prints the digest for 
 node hooks/memory-persistence/save.mjs    # PreCompact: consolidate + dedupe (idempotent)
 node hooks/memory-persistence/clean.mjs   # SessionEnd: enforce TTL + max bound
 ```
-Entry types: `goal | decision | constraint | glossary | fact`. Store: `.mixture/memory/store.json`
-(gitignored). Tunables: `MIXTURE_MEMORY_{DIR,LOAD_LIMIT,MAX,TTL_DAYS}`.
+Entry types: `goal | decision | constraint | glossary | fact`. Tunables:
+`MIXTURE_MEMORY_{DIR,LOAD_LIMIT,MAX,TTL_DAYS}`.
+
+**Backends** (`MIXTURE_MEMORY_BACKEND`): `json` (default, `store.json`, Node ≥18) or `sqlite`
+(`store.db` via the built-in `node:sqlite`, zero extra deps, Node ≥22). `load`/`save`/`clean` are
+backend-agnostic — same behavior, same idempotency and bound, either way.
 
 > **Implemented (Phase 2).** `lib.mjs` is the dependency-free store; the three scripts realize the
 > lifecycle. Writing the contract first paid off: idempotency and the bound are enforced in *code*, the
