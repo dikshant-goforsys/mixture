@@ -1,6 +1,6 @@
 {
   "name": "mixture-skills",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "A deliberately-small, layered skills + agents framework for Claude Code. Install skills, session memory, and a multi-agent task runtime into any project.",
   "license": "MIT",
   "type": "module",
