@@ -191,4 +191,3 @@ Mixture's value is its discipline, not its size. If you adopt it, keep the guard
 
 See `docs/architecture.md` (what each idea was taken from), `docs/premortem.md` (10 ways it fails + guards),
 and `docs/adr/` (decisions) for the full reasoning.
-```
