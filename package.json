@@ -10,7 +10,7 @@
   },
   "scripts": {
     "validate": "node scripts/validate-frontmatter.mjs",
-    "drift": "node scripts/check-drift.mjs",
+    "drift": "node scripts/check-drift.mjs --ci",
     "hooks:resolve": "node scripts/resolve-hooks.mjs",
     "hooks:check": "node scripts/resolve-hooks.mjs --check",
     "ci": "npm run validate && npm run drift && npm run hooks:check"

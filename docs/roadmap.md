@@ -11,7 +11,9 @@ next begins. **You do not skip ahead to L4.**
 - [x] `validate-frontmatter.mjs` (enforce-in-code)
 - [x] `evals/` harness + first eval
 - [x] 3 more high-value skills via the gate: `tdd`, `context`, `code-review` (each with an eval)
-- [ ] Dogfood on a real task; record an ADR per non-obvious decision
+- [x] Dogfood on a real task — `diagnose` found the strict-hook authoring deadlock; fixed via ADR-0002
+
+**Phase 1 complete.**
 
 ## Phase 2 — L3 governance
 - [x] Implement `memory-persistence/{load,save,clean}.mjs` against the contract (idempotent, bounded, pin-safe)
