@@ -1,0 +1,9 @@
+# Local memory store — durable session state, not source. Lives outside the context window.
+.mixture/
+
+# Node
+node_modules/
+*.log
+
+# OS
+.DS_Store

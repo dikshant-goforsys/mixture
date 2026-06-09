@@ -1,0 +1,38 @@
+{
+  "_comment": "L3 governance plane — MINIMAL and CI-validated, the opposite of ECC's 50KB hooks.json. Behavior is tuned via env vars (MIXTURE_HOOK_PROFILE: off|standard|strict; MIXTURE_DISABLED_HOOKS=name,name), never by editing this file in-place.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "_name": "validate-skill-frontmatter",
+        "_profile": "standard",
+        "matcher": "Write|Edit",
+        "command": "node scripts/validate-frontmatter.mjs --changed",
+        "_note": "Blocks (exit 2) when a touched SKILL.md violates the routing contract. Skipped unless MIXTURE_HOOK_PROFILE>=standard."
+      }
+    ],
+    "SessionStart": [
+      {
+        "_name": "load-memory",
+        "_profile": "standard",
+        "command": "node hooks/memory-persistence/load.mjs",
+        "_note": "Prints a durable-memory digest to stdout for context injection. See hooks/memory-persistence/README.md."
+      }
+    ],
+    "PreCompact": [
+      {
+        "_name": "save-memory",
+        "_profile": "standard",
+        "command": "node hooks/memory-persistence/save.mjs",
+        "_note": "Consolidates + dedupes the durable store before the context window is compacted."
+      }
+    ],
+    "SessionEnd": [
+      {
+        "_name": "clean-memory",
+        "_profile": "standard",
+        "command": "node hooks/memory-persistence/clean.mjs",
+        "_note": "Enforces the store bound (TTL + max), never evicting pinned entries."
+      }
+    ]
+  }
+}

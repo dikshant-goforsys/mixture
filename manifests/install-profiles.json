@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "_comment": "Profiles decouple WHAT to install from the catalog, so a heavy repo can install light. Pattern from ECC, scoped down. Each profile is a set of skill paths.",
+  "profiles": {
+    "minimal": {
+      "description": "The behavioral kernel only. Smallest context footprint.",
+      "skills": ["skills/kernel/coding-behavior"]
+    },
+    "dev": {
+      "description": "Kernel + daily engineering skills. The default for coding work.",
+      "skills": [
+        "skills/kernel/coding-behavior",
+        "skills/engineering/grill-me",
+        "skills/engineering/diagnose",
+        "skills/engineering/tdd",
+        "skills/engineering/context",
+        "skills/engineering/code-review"
+      ]
+    },
+    "authoring": {
+      "description": "For people extending Mixture itself.",
+      "skills": [
+        "skills/kernel/coding-behavior",
+        "skills/meta/write-a-skill"
+      ]
+    },
+    "full": {
+      "description": "Everything shipped. Still small by design.",
+      "skills": [
+        "skills/kernel/coding-behavior",
+        "skills/engineering/grill-me",
+        "skills/engineering/diagnose",
+        "skills/engineering/tdd",
+        "skills/engineering/context",
+        "skills/engineering/code-review",
+        "skills/meta/write-a-skill"
+      ]
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "mixture",
+  "version": "0.1.0",
+  "description": "A deliberately-small, layered skills + agents framework for Claude Code. Synthesized from karpathy-skills, mattpocock/skills, ECC, and paperclip.",
+  "license": "MIT",
+  "skills": [
+    "./skills/kernel/coding-behavior",
+    "./skills/meta/write-a-skill",
+    "./skills/engineering/grill-me",
+    "./skills/engineering/diagnose",
+    "./skills/engineering/tdd",
+    "./skills/engineering/context",
+    "./skills/engineering/code-review"
+  ],
+  "commands": [],
+  "mcpServers": {}
+}
