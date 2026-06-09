@@ -28,9 +28,13 @@ const die = (s) => { console.error("✖ " + s); process.exit(1); };
 
 const loadProfiles = () => JSON.parse(readFileSync(join(PKG_ROOT, "manifests/install-profiles.json"), "utf8")).profiles;
 
+// lstat-based existence: existsSync follows symlinks, so a broken symlink (e.g. a stale
+// --link install whose source was pruned) would be invisible and then crash cpSync with EEXIST.
+const onDisk = (p) => { try { lstatSync(p); return true; } catch { return false; } };
+
 function placeSkill(src, dest, { link, force, dry }) {
   const name = basename(dest);
-  if (existsSync(dest)) {
+  if (onDisk(dest)) {
     if (!force) { warn(`skill "${name}" already present — skipped (use --force to overwrite)`); return; }
     if (!dry) rmSync(dest, { recursive: true, force: true });
   }
@@ -43,7 +47,11 @@ function placeSkill(src, dest, { link, force, dry }) {
 
 function copyDir(src, dest, { dry, force }) {
   if (!existsSync(src)) { warn(`missing ${src} — skipped`); return; }
-  if (existsSync(dest) && !force) { warn(`${dest} exists — skipped (use --force)`); return; }
+  if (onDisk(dest)) {
+    if (!force) { warn(`${dest} exists — skipped (use --force)`); return; }
+    // --force replaces, not merges: files removed upstream must not linger after an upgrade.
+    if (!dry) rmSync(dest, { recursive: true, force: true });
+  }
   if (dry) { log(`would copy ${basename(src)} -> ${dest}`); return; }
   mkdirSync(dirname(dest), { recursive: true });
   cpSync(src, dest, { recursive: true });
@@ -59,16 +67,25 @@ function wireMemoryHooks(target, { dry, backend = "json" }) {
   }
   settings.hooks ||= {};
   const env = backend === "sqlite" ? "MIXTURE_MEMORY_BACKEND=sqlite " : "";
-  const add = (event, command) => {
-    settings.hooks[event] ||= [];
-    if (JSON.stringify(settings.hooks[event]).includes(command)) return false; // idempotent
-    settings.hooks[event].push({ hooks: [{ type: "command", command }] });
+  // Upsert keyed by script path (not full-command substring): switching backends must
+  // REPLACE the existing entry, never append a duplicate or silently keep the old backend.
+  const add = (event, script) => {
+    const command = `${env}node ${script}`;
+    const arr = (settings.hooks[event] ||= []);
+    const idx = arr.findIndex((e) => (e?.hooks || []).some((h) => typeof h?.command === "string" && h.command.endsWith(`node ${script}`)));
+    const entry = { hooks: [{ type: "command", command }] };
+    if (idx !== -1) {
+      if (JSON.stringify(arr[idx]) === JSON.stringify(entry)) return false; // already wired as-is
+      arr[idx] = entry; // backend switch
+      return true;
+    }
+    arr.push(entry);
     return true;
   };
   const added = [
-    add("SessionStart", `${env}node .mixture/framework/memory/load.mjs`),
-    add("PreCompact", `${env}node .mixture/framework/memory/save.mjs`),
-    add("SessionEnd", `${env}node .mixture/framework/memory/clean.mjs`),
+    add("SessionStart", ".mixture/framework/memory/load.mjs"),
+    add("PreCompact", ".mixture/framework/memory/save.mjs"),
+    add("SessionEnd", ".mixture/framework/memory/clean.mjs"),
   ].filter(Boolean).length;
   if (dry) { log(`would wire ${added} memory hook(s) into .claude/settings.json`); return; }
   mkdirSync(dirname(settingsPath), { recursive: true });
@@ -108,17 +125,19 @@ function install() {
     if (!["json", "sqlite"].includes(backend)) die(`--memory-backend must be "json" or "sqlite" (got "${backend}")`);
     copyDir(join(PKG_ROOT, "hooks/memory-persistence"), join(target, ".mixture/framework/memory"), { dry, force });
     wireMemoryHooks(target, { dry, backend });
-    if (backend === "sqlite") log("memory backend: sqlite (consumer needs Node >=22; zero extra deps)");
+    if (backend === "sqlite") log("memory backend: sqlite (consumer needs Node >=22.13 for unflagged node:sqlite; zero extra deps)");
   }
   if (withCoord) {
     copyDir(join(PKG_ROOT, "coordination"), join(target, ".mixture/framework/coordination"), { dry, force });
     log("L4 ready: node .mixture/framework/coordination/cli.mjs create --title \"…\"  (set MIXTURE_COORD_DIR)");
   }
-  if (!dry) {
+  if (dry) {
+    log("would copy guide -> .mixture/how-to-use.md");
+  } else {
     mkdirSync(join(target, ".mixture"), { recursive: true });
     copyFileSync(join(PKG_ROOT, "how-to-use.md"), join(target, ".mixture/how-to-use.md"));
+    log("guide -> .mixture/how-to-use.md");
   }
-  log("guide -> .mixture/how-to-use.md");
 
   console.log(`\n✓ Done. Restart Claude Code (or /reload-skills) so it picks up the new skills.`);
   console.log(`  Skills are auto-invoked by their description; try a coding task and the kernel engages.\n`);
@@ -172,12 +191,12 @@ Usage:
   npx mixture-skills guide [--print]     locate or print how-to-use.md
 
 install options:
-  --profile <name>      minimal | dev (default) | authoring | coordination | full
+  --profile <name>      minimal | dev (default) | frontend | authoring | coordination | full
   --target <dir>        project to install into (default: current dir)
   --global              install skills into ~/.claude/skills (all projects)
   --link                symlink skills instead of copying (for local dev clones)
   --with-memory         install the session-memory runtime + wire its hooks
-  --memory-backend <b>  json (default) or sqlite (zero-dep, needs Node >=22 on the consumer)
+  --memory-backend <b>  json (default) or sqlite (zero-dep, needs Node >=22.13 on the consumer)
   --with-coordination   install the L4 task-ledger runtime + the coordination-protocol skill
   --force               overwrite skills/runtimes that already exist
   --dry-run             print actions, change nothing

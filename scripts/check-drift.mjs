@@ -27,7 +27,9 @@ function readJSON(p) {
   try { return JSON.parse(readFileSync(p, "utf8")); }
   catch (e) { hard.push(`cannot parse ${p}: ${e.message}`); return null; }
 }
-const norm = (p) => p.replace(/^\.\//, "").replace(/\/$/, "");
+// Normalize to forward slashes so join()-built paths (backslashes on win32) compare
+// equal to the forward-slash entries in plugin.json and the profiles manifest.
+const norm = (p) => p.replace(/\\/g, "/").replace(/^\.\//, "").replace(/\/$/, "");
 
 // Every skill dir on disk (a dir containing SKILL.md) under skills/.
 function findSkillDirs(dir, acc = []) {
@@ -36,6 +38,13 @@ function findSkillDirs(dir, acc = []) {
   if (entries.some((e) => e.isFile() && e.name === "SKILL.md")) acc.push(norm(dir));
   for (const e of entries) if (e.isDirectory()) findSkillDirs(join(dir, e.name), acc);
   return acc;
+}
+
+// This is an authoring-repo gate. The npm tarball ships scripts/ but not .claude-plugin/
+// or evals/, so running from a consumer project must be a clean no-op, not a hard failure.
+if (!existsSync(".claude-plugin/plugin.json")) {
+  console.log("✓ check-drift: no .claude-plugin/plugin.json here — not a Mixture authoring repo, nothing to check.");
+  process.exit(0);
 }
 
 const plugin = readJSON(".claude-plugin/plugin.json");

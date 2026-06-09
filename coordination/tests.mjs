@@ -121,5 +121,55 @@ function throws(code, fn, msg) {
   ok(L.getReady(l, "ag").length === 1, "stale gate no longer blocks readiness");
 }
 
+// --- completion respects terminal states + blocker integrity (review must-fix 1)
+{
+  const l = L.newLedger();
+  const a = L.createTask(l, { title: "A" });
+  L.setStatus(l, a.id, "cancelled");
+  throws("TRANSITION", () => L.complete(l, a.id), "completing a cancelled task -> TRANSITION");
+  ok(l.tasks[a.id].status === "cancelled", "cancelled task not resurrected");
+  const b = L.createTask(l, { title: "blocker" });
+  const c = L.createTask(l, { title: "dependent" });
+  L.addBlocker(l, c.id, b.id);
+  throws("TRANSITION", () => L.complete(l, c.id), "completing with unresolved blockers -> TRANSITION");
+  L.complete(l, b.id);
+  L.complete(l, c.id);
+  throws("TRANSITION", () => L.complete(l, c.id), "re-completing a done task -> TRANSITION");
+}
+
+// --- budget input validation: NaN must not disable the hard-stop (review must-fix 2)
+{
+  const l = L.newLedger();
+  l.budget.cap = 10;
+  const a = L.createTask(l, { title: "A" });
+  throws("USAGE", () => L.recordCost(l, a.id, Number(undefined)), "NaN cost -> USAGE");
+  throws("USAGE", () => L.recordCost(l, a.id, -5), "negative cost -> USAGE");
+  ok(l.budget.spent === 0 && l.tasks[a.id].cost === 0, "rejected cost leaves budget untouched");
+  L.recordCost(l, a.id, 10);
+  throws("BUDGET", () => L.checkout(l, a.id, "ag", "r"), "hard-stop still enforced after valid spend");
+}
+
+// --- checkout refuses a task waiting on a human gate (review must-fix 5)
+{
+  const l = L.newLedger();
+  const blocker = L.createTask(l, { title: "blocker" });
+  const t = L.createTask(l, { title: "gated" });
+  L.addBlocker(l, t.id, blocker.id);
+  L.requestInteraction(l, { taskId: t.id, kind: "ask_user_questions", prompt: "Q?", idempotencyKey: "q:gated:r1" });
+  L.complete(l, blocker.id); // the reachable sequence: auto-resume to todo + wake while the gate is pending
+  ok(l.tasks[t.id].status === "todo", "dependent resumed while gate still pending");
+  throws("BLOCKED", () => L.checkout(l, t.id, "ag", "r"), "checkout with pending gate -> BLOCKED");
+  L.resolveInteraction(l, l.interactions[0].id, "answer");
+  L.checkout(l, t.id, "ag", "r");
+  ok(l.tasks[t.id].status === "in_progress", "checkout succeeds once gate resolved");
+}
+
+// --- createTask validates parent before mutating (review nit 10)
+{
+  const l = L.newLedger();
+  throws("USAGE", () => L.createTask(l, { title: "orphan", parent: "T-99" }), "unknown parent -> USAGE");
+  ok(Object.keys(l.tasks).length === 0 && l.nextId === 1, "failed create leaves no orphan and no id burn");
+}
+
 console.log(`coordination ledger: ${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

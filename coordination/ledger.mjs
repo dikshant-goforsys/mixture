@@ -73,6 +73,8 @@ export function withLock(fn, { timeoutMs = 5000, staleMs = 15000 } = {}) {
 
 export function createTask(L, { title, priority = 1, parent = null, status = "todo" }, now = Date.now()) {
   if (!title) throw new LedgerError("USAGE", "task needs a title");
+  // Validate BEFORE mutating: a throw must leave no orphan task and burn no id.
+  if (parent && !L.tasks[parent]) throw new LedgerError("USAGE", `parent ${parent} not found`);
   const id = `T-${L.nextId++}`;
   const task = {
     id, title, status, priority, parent,
@@ -81,10 +83,6 @@ export function createTask(L, { title, priority = 1, parent = null, status = "to
     cost: 0, createdTs: now, updatedTs: now,
   };
   L.tasks[id] = task;
-  if (parent) {
-    const p = L.tasks[parent];
-    if (!p) throw new LedgerError("USAGE", `parent ${parent} not found`);
-  }
   return task;
 }
 
@@ -117,6 +115,10 @@ export function checkout(L, id, agent, runId, { expectedStatuses = ["todo", "in_
   // task that's waiting on dependencies (its status is "blocked", which no expected set includes).
   if (blockersUnresolved(L, t))
     throw new LedgerError("BLOCKED", `${id} has unresolved blockers`);
+  // Human-gate guard here (not only in getReady): the blockers_resolved wake path can hand a
+  // gated task straight to checkout, and dispatching it would moot the pending question.
+  if (hasPendingInteraction(L, id))
+    throw new LedgerError("BLOCKED", `${id} is waiting on a human gate — resolve its interaction first`);
   if (!expectedStatuses.includes(t.status))
     throw new LedgerError("CONFLICT", `${id} is ${t.status}, expected one of [${expectedStatuses}] — do not retry`);
   t.status = "in_progress";
@@ -137,6 +139,9 @@ export function heartbeat(L, id, runId, now = Date.now()) {
 }
 
 export function recordCost(L, id, amount, now = Date.now()) {
+  // NaN poisons spent forever (NaN >= cap is always false), silently killing the hard-stop.
+  if (!Number.isFinite(amount) || amount < 0)
+    throw new LedgerError("USAGE", `cost amount must be a non-negative number (got ${amount})`);
   const t = get(L, id);
   t.cost += amount;
   L.budget.spent += amount;
@@ -159,6 +164,12 @@ export function setStatus(L, id, to, agent, now = Date.now()) {
 // --- Completion + blocker-DAG auto-resume.
 export function complete(L, id, now = Date.now()) {
   const t = get(L, id);
+  // Guard here, not only in setStatus: the CLI `done` command calls complete() directly.
+  // Terminal states stay terminal, and a task with unresolved blockers cannot be done.
+  if (t.status === "done" || t.status === "cancelled")
+    throw new LedgerError("TRANSITION", `cannot complete ${id}: ${t.status} is terminal`);
+  if (blockersUnresolved(L, t))
+    throw new LedgerError("TRANSITION", `cannot complete ${id} with unresolved blockers`);
   t.status = "done";
   t.assignee = null;
   t.executionRunId = null;

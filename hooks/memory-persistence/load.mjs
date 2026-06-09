@@ -5,7 +5,8 @@
 
 import { readStore, sortEntries } from "./lib.mjs";
 
-const LIMIT = Number(process.env.MIXTURE_MEMORY_LOAD_LIMIT || 50);
+const rawLimit = Number(process.env.MIXTURE_MEMORY_LOAD_LIMIT);
+const LIMIT = Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : 50; // NaN -> slice(0, NaN) = [] would silently restore nothing
 const entries = readStore().sort(sortEntries).slice(0, LIMIT);
 
 if (entries.length === 0) process.exit(0); // nothing to restore; stay silent

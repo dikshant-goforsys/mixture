@@ -50,7 +50,11 @@ function run() {
     case "status": { const t = L.setStatus(l, flag("--id"), flag("--to"), flag("--agent", null)); L.save(l); return out(brief(t.task || t)); }
     case "done": { const r = L.complete(l, flag("--id")); L.save(l); return out({ done: r.task.id, resumed: r.resumed, wakes: l.wakes }); }
     case "budget": {
-      if (argv.includes("--set")) l.budget.cap = Number(flag("--set"));
+      if (argv.includes("--set")) {
+        const cap = Number(flag("--set"));
+        if (!Number.isFinite(cap) || cap < 0) throw new L.LedgerError("USAGE", `--set needs a non-negative number (got ${flag("--set")})`);
+        l.budget.cap = cap;
+      }
       L.save(l); return out({ budget: l.budget });
     }
     case "scan": {
@@ -81,11 +85,14 @@ function tick(l) {
   if (!agent || !run) { console.error("tick needs --agent and --run"); process.exit(CODE.USAGE); }
   if (l.budget.cap != null && l.budget.spent >= l.budget.cap) { L.save(l); return out({ budget_exhausted: true, budget: l.budget }); }
   const recovered = L.livenessScan(l, Number(flag("--ttl-ms", 600000)));
-  // scoped-wake fast path: prefer a queued wake whose task is workable
+  // scoped-wake fast path: prefer a queued wake whose task is workable. A task waiting on a
+  // human gate is skipped (wake stays queued) — checkout would refuse it anyway.
   let targetId = null, reason = "picked";
   for (let i = 0; i < l.wakes.length; i++) {
     const w = l.wakes[i]; const t = l.tasks[w.taskId];
-    if (t && (t.status === "todo" || t.status === "in_review")) { targetId = w.taskId; reason = w.reason; l.wakes.splice(i, 1); break; }
+    if (t && (t.status === "todo" || t.status === "in_review") && !L.hasPendingInteraction(l, w.taskId)) {
+      targetId = w.taskId; reason = w.reason; l.wakes.splice(i, 1); break;
+    }
   }
   if (!targetId) { const top = L.getReady(l, agent)[0]; targetId = top?.id || null; }
   if (!targetId) { L.save(l); return out({ idle: true, recovered }); }

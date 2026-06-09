@@ -105,6 +105,10 @@ Control behavior with env vars — no file edits:
 
 To wire into Claude Code, put the resolved output's `hooks` into your project `.claude/settings.json`.
 
+> Note: `hooks/hooks.json` commands are repo-relative — this flow is for working **on the Mixture repo
+> itself**. In a consumer project, don't resolve this file; `npx mixture-skills install --with-memory`
+> wires the memory hooks with consumer-correct paths (`.mixture/framework/memory/*`) automatically.
+
 ### Session memory (survives compaction)
 Durable facts live outside the context window. **Two backends**, selected by `MIXTURE_MEMORY_BACKEND`:
 - `json` (default) — a single `.mixture/memory/store.json`; works on Node ≥ 18.

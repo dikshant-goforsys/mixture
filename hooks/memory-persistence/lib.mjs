@@ -61,7 +61,7 @@ function sqliteMod() {
   if (_sqlite) return _sqlite;
   try { _sqlite = createRequire(import.meta.url)("node:sqlite"); return _sqlite; }
   catch {
-    throw new Error("MIXTURE_MEMORY_BACKEND=sqlite requires Node >=22 (built-in node:sqlite). Use the json backend or upgrade Node.");
+    throw new Error("MIXTURE_MEMORY_BACKEND=sqlite requires Node >=22.13 (node:sqlite is flagged --experimental-sqlite on 22.5–22.12). Use the json backend or upgrade Node.");
   }
 }
 function withDb(fn) {

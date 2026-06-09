@@ -1,5 +1,5 @@
 {
-  "_comment": "L3 governance plane — MINIMAL and CI-validated, the opposite of ECC's 50KB hooks.json. Behavior is tuned via env vars (MIXTURE_HOOK_PROFILE: off|standard|strict; MIXTURE_DISABLED_HOOKS=name,name), never by editing this file in-place.",
+  "_comment": "L3 governance plane — MINIMAL and CI-validated, the opposite of ECC's 50KB hooks.json. Behavior is tuned via env vars (MIXTURE_HOOK_PROFILE: off|standard|strict; MIXTURE_DISABLED_HOOKS=name,name), never by editing this file in-place. NOTE: commands here are repo-relative — this file governs the Mixture AUTHORING repo. Consumer projects should NOT resolve this file; `npx mixture-skills install --with-memory` wires consumer-correct hook paths (.mixture/framework/memory/*) into .claude/settings.json.",
   "hooks": {
     "PreToolUse": [
       {

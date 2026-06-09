@@ -6,13 +6,21 @@
 
 import { readStore, writeStore, sortEntries } from "./lib.mjs";
 
-function num(name, def) {
+// A NaN bound is catastrophic here: `ts >= NaN` is false for every entry, so an invalid
+// --ttl-days or env var would silently evict the entire non-pinned store. Validate each
+// source and fall back to the default, loudly.
+function num(name, envVal, def) {
   const i = process.argv.indexOf(name);
-  return i !== -1 && i + 1 < process.argv.length ? Number(process.argv[i + 1]) : def;
+  const raw = i !== -1 && i + 1 < process.argv.length ? process.argv[i + 1] : envVal;
+  if (raw == null || raw === "") return def;
+  const n = Number(raw);
+  if (Number.isFinite(n) && n >= 0) return n;
+  console.error(`! ignoring invalid ${name.replace(/^--/, "")} value "${raw}" — using default ${def}`);
+  return def;
 }
 
-const MAX = num("--max", Number(process.env.MIXTURE_MEMORY_MAX || 200));
-const TTL_DAYS = num("--ttl-days", Number(process.env.MIXTURE_MEMORY_TTL_DAYS || 90));
+const MAX = num("--max", process.env.MIXTURE_MEMORY_MAX, 200);
+const TTL_DAYS = num("--ttl-days", process.env.MIXTURE_MEMORY_TTL_DAYS, 90);
 const cutoff = Date.now() - TTL_DAYS * 86_400_000;
 
 let entries = readStore();
