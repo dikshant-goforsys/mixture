@@ -1,9 +1,10 @@
-# L4 Coordination plane — SPEC (deferred build)
+# L4 Coordination plane — SPEC + status
 
-> **Status: specified, not implemented.** Building this before a real fleet of agents exists is
-> premortem #2 — the documented #1 way this project dies. This spec exists so that *when* it's earned,
-> the design is already pinned. Do not write this code until you are actually running ≥ ~5 agents that
-> step on each other.
+> **Status: BUILT ahead of the gate (ADR-0003).** The user opted to build the full runtime now, with the
+> premortem-#2 risk explicitly acknowledged. The **substrate is done and tested** — `coordination/ledger.mjs`
+> (every hard invariant) + `coordination/cli.mjs` + `coordination/tests.mjs` (20 passing) + the
+> `coordination-protocol` skill. The **automation layer** (cron/wake/dispatch) is wired and documented in
+> `coordination/README.md` but expected to iterate. The gate below is recorded as *not met* — we proceeded anyway.
 
 ## The bet that makes L4 cheap
 Because Mixture is pinned to **Claude Code**, paperclip's bespoke control-plane primitives map onto
@@ -42,8 +43,12 @@ A single `SKILL.md` injected into every worker, encoding the heartbeat procedure
 - No multi-company isolation, no trust presets, no plugin runtime. That is paperclip's scope, not ours.
 - No remote git assumptions — the worktree is the persistence boundary (paperclip's no-git-push contract).
 
-## Gate to start building L4
-All true before any L4 code is written:
-- [ ] L0–L3 stable and eval-backed.
-- [ ] You are routinely running ≥ ~5 concurrent agents that conflict or wait on each other.
-- [ ] A manual task ledger has proven the workflow before automation.
+## Gate to start building L4 (recorded as OVERRIDDEN — ADR-0003)
+The gate was:
+- [x] L0–L3 stable and eval-backed. _(met)_
+- [ ] You are routinely running ≥ ~5 concurrent agents that conflict or wait on each other. _(NOT met — overridden)_
+- [ ] A manual task ledger has proven the workflow before automation. _(NOT met — overridden)_
+
+We built anyway by explicit request. The mitigation for proceeding ungated: substrate-first with code-
+enforced invariants + a passing test suite, so the risky part (automation) sits on a proven base, and the
+whole plane is removable (L4 depends on nothing below it depending on it).

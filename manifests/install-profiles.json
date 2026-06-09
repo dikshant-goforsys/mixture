@@ -24,6 +24,13 @@
         "skills/meta/write-a-skill"
       ]
     },
+    "coordination": {
+      "description": "L4 multi-agent runtime: the kernel + the heartbeat behavioral contract.",
+      "skills": [
+        "skills/kernel/coding-behavior",
+        "skills/coordination/coordination-protocol"
+      ]
+    },
     "full": {
       "description": "Everything shipped. Still small by design.",
       "skills": [
@@ -33,7 +40,8 @@
         "skills/engineering/tdd",
         "skills/engineering/context",
         "skills/engineering/code-review",
-        "skills/meta/write-a-skill"
+        "skills/meta/write-a-skill",
+        "skills/coordination/coordination-protocol"
       ]
     }
   }

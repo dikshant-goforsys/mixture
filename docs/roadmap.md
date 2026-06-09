@@ -23,12 +23,14 @@ next begins. **You do not skip ahead to L4.**
 
 **Phase 2 complete.**
 
-## Phase 3 — L4 coordination (only when the gate in the spec is met)
-- [ ] Manual task ledger proves the workflow first
-- [ ] `coordination-protocol` skill (the injected heartbeat contract)
-- [ ] Atomic checkout + budget hard-stop **in code**
-- [ ] Blocker DAG + auto-resume wake (cron/hook)
-- [ ] Liveness/recovery (every owned task has a wake path)
+## Phase 3 — L4 coordination (built ahead of gate — ADR-0003)
+- [x] `coordination-protocol` skill (the injected heartbeat contract) + eval
+- [x] Atomic checkout + budget hard-stop **in code** (`ledger.mjs`, exit codes 7/8/9)
+- [x] Blocker DAG + auto-resume wake; circular edges rejected
+- [x] Liveness/recovery (stale run released + exactly one wake)
+- [x] 20-case invariant test suite wired into CI
+- [~] Automation layer (cron/ScheduleWakeup heartbeat, dispatch via Agent) — wired + documented, **iterating**
+- [ ] Validate against a real ≥5-agent fleet (the gate we skipped — close it retroactively)
 
 ## Distribution (any time after Phase 1 is eval-backed)
 - [ ] `marketplace.json` + versioned releases

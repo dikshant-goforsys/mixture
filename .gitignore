@@ -1,4 +1,5 @@
-# Local memory store — durable session state, not source. Lives outside the context window.
+# Local runtime state — durable session/coordination state, not source.
+# (memory store + L4 task ledger live here; both outside the context window)
 .mixture/
 
 # Node

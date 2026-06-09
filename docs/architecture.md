@@ -28,11 +28,13 @@ lifecycle (SessionStart/PreCompact/SessionEnd).
 **Rejected, emphatically:** the 261-skill / 64-agent sprawl; the 50KB hooks.json; the cross-harness
 dotfolders; inflated stats as proof. ECC is the cautionary tale that justifies the cap.
 
-### L4 — paperclipai/paperclip → `docs/coordination-plane.spec.md` (deferred)
-**Taken (as spec):** heartbeat execution primitive; atomic checkout / no-retry-409; blocker DAG with
-auto-resume; typed idempotent human-in-the-loop gates; budget hard-stops; runtime-injected behavioral contract.
-**Rejected:** building it before there's a fleet to coordinate; the GDP-of-nations vision; prose-only
-invariants the runtime can't enforce.
+### L4 — paperclipai/paperclip → `coordination/` (BUILT ahead of gate, ADR-0003)
+**Taken (and implemented):** heartbeat execution primitive (`cli.mjs tick`); atomic checkout / no-retry-409
+(exit code 9); blocker DAG with auto-resume; budget hard-stops (exit 7); liveness recovery; runtime-injected
+behavioral contract (`coordination-protocol` skill). All hard invariants enforced in `ledger.mjs`, tested
+(20 cases), CI-gated.
+**Rejected:** the GDP-of-nations vision; multi-company isolation / trust presets / plugin runtime; prose-only
+invariants. **Knowingly deferred:** validation against a real fleet — the gate we overrode (ADR-0003).
 
 ## Dependency rule
 Lower layers never depend on higher ones. The kernel works alone. Skills work with just the kernel.

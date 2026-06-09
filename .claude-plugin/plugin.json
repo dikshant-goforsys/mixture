@@ -10,7 +10,8 @@
     "./skills/engineering/diagnose",
     "./skills/engineering/tdd",
     "./skills/engineering/context",
-    "./skills/engineering/code-review"
+    "./skills/engineering/code-review",
+    "./skills/coordination/coordination-protocol"
   ],
   "commands": [],
   "mcpServers": {}

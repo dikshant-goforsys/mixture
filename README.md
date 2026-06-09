@@ -27,7 +27,7 @@ have a real fleet of agents to coordinate is the #1 documented failure mode (see
 
 - ✅ **Phase 1 (now):** L0–L2 — the kernel skill, the `write-a-skill` quality gate, exemplar skills, validation.
 - ✅ **Phase 2:** L3 — profiles, env-governed hooks (`resolve-hooks`), memory lifecycle, CI gate, ECC-derived references.
-- 📋 **Phase 3 (spec'd):** L4 — coordination plane on Claude Code primitives. See `docs/coordination-plane.spec.md`.
+- ⚠️ **Phase 3 (built ahead of gate — ADR-0003):** L4 — tested ledger substrate + `coordination-protocol` skill done; automation layer wired and iterating. See `coordination/README.md`.
 
 ## Layout
 
@@ -40,6 +40,7 @@ skills/
   in-progress/ deprecated/        # hidden buckets (not shipped)
 manifests/install-profiles.json   # L3
 hooks/                            # L3 — minimal + CI-validated
+coordination/                     # L4 — tested ledger + invariants + CLI + heartbeat runtime
 evals/                            # FIRST-CLASS. No skill ships without one.
 scripts/validate-frontmatter.mjs  # enforce-in-code what prose can't guarantee
 docs/{architecture,premortem,roadmap,coordination-plane.spec}.md

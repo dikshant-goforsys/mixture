@@ -19,3 +19,5 @@ jobs:
         run: node scripts/check-drift.mjs --ci
       - name: Resolve hooks for every profile
         run: node scripts/resolve-hooks.mjs --check
+      - name: L4 coordination ledger invariants
+        run: node coordination/tests.mjs
