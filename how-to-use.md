@@ -13,8 +13,11 @@ is in this repo and tested.
 From inside the project you want to add Mixture to:
 
 ```bash
-# published to npm:                or, straight from the repo:
-npx mixture install --profile dev      npx github:<you>/mixture install --profile dev
+# straight from GitHub (works now):
+npx github:dikshant-goforsys/mixture install --profile dev
+
+# or, once published to npm:
+npx mixture-skills install --profile dev
 ```
 
 Common variants:
@@ -236,9 +239,9 @@ Use `@<your-npm-username>/mixture` instead (scoped names are always free, namesp
 - consumers run `npx @you/mixture install …`
 
 ### No npm at all (works today, zero setup)
-If the repo is on GitHub, skip publishing entirely:
+The repo is on GitHub, so you can skip npm publishing entirely:
 ```bash
-npx github:<your-user>/<your-repo> install --profile dev
+npx github:dikshant-goforsys/mixture install --profile dev
 ```
 
 ---

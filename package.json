@@ -17,6 +17,14 @@
     "mixture-skills": "bin/mixture.mjs",
     "mixture": "bin/mixture.mjs"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dikshant-goforsys/mixture.git"
+  },
+  "homepage": "https://github.com/dikshant-goforsys/mixture#readme",
+  "bugs": {
+    "url": "https://github.com/dikshant-goforsys/mixture/issues"
+  },
   "files": [
     "bin",
     "skills",
