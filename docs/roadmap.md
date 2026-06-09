@@ -29,8 +29,10 @@ next begins. **You do not skip ahead to L4.**
 - [x] Blocker DAG + auto-resume wake; circular edges rejected
 - [x] Liveness/recovery (stale run released + exactly one wake)
 - [x] 20-case invariant test suite wired into CI
-- [~] Automation layer (cron/ScheduleWakeup heartbeat, dispatch via Agent) — wired + documented, **iterating**
-- [ ] Validate against a real ≥5-agent fleet (the gate we skipped — close it retroactively)
+- [x] Typed human-in-the-loop gates (idempotent, revision-bound) + cross-process lock (28 tests)
+- [x] Live dispatch demo (2 concurrent agents) + high-contention test (20 procs / 4 agents) — `coordination/DEMO.md`
+- [~] Automation layer (cron/ScheduleWakeup heartbeat, dispatch via Agent) — wired + live cron `0d53ff81`, **iterating**
+- [ ] Remaining fleet-gate items: sustained multi-heartbeat soak; cross-session heartbeat persistence
 
 ## Distribution (any time after Phase 1 is eval-backed)
 - [ ] `marketplace.json` + versioned releases

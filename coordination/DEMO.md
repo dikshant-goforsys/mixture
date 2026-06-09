@@ -25,6 +25,30 @@ the first step of retroactively closing the fleet gate we overrode in ADR-0003.
 
 ## What this proves
 The substrate's guarantees hold under real concurrent agents: atomic single-assignee checkout, the
-blocker DAG + auto-resume, and budget accounting. What it does **not** yet prove: behavior under genuine
-contention (here the two agents never raced for the *same* task) or at fleet scale. Next: a higher-
-contention run (more agents than ready tasks) to exercise the CONFLICT/no-retry path live.
+blocker DAG + auto-resume, and budget accounting. What it did **not** yet prove (the two agents never
+raced for the *same* task) is covered by the high-contention run below.
+
+---
+
+# High-contention run (2026-06-09) — the CONFLICT / no-retry path
+
+The dispatch demo above never raced two agents for one task (`tick` + the lock load-balance them apart).
+This run forces genuine contention.
+
+## Level A — raw process stress
+**20 concurrent processes** all `checkout --id T-1` on a single task.
+- Result: **1 won (exit 0), 19 CONFLICT (exit 9).** T-1 left with exactly one assignee. Ledger JSON valid.
+
+## Level B — real agents + a double-work detector
+**4 subagents** (alpha/beta/gamma/delta) each attempt to claim the *same* task T-1 once. The task's
+action appends a line to `winner.log`, so any double-execution is visible as >1 line.
+- alpha → **WON** (exit 0), executed. beta/gamma/delta → **CONFLICT** (exit 9), **none retried, none
+  touched the log.**
+- Verified: `winner.log` has **exactly one line** (`alpha`); T-1 `done`; budget `spent: 500` (charged
+  once); ledger JSON valid.
+
+## What this proves
+Under real contention, the optimistic lock yields exactly one winner, the losers obey "never retry a
+CONFLICT," and the guarded side-effect happens **exactly once** — no double-work, no lost update, no
+corruption. Combined with the dispatch demo, the fleet gate's correctness concerns (ADR-0003) are now
+exercised live. Still open: sustained scale/soak over many heartbeats, and cross-session heartbeat persistence.
