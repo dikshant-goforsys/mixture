@@ -68,18 +68,21 @@ function wireMemoryHooks(target, { dry, backend = "json" }) {
   settings.hooks ||= {};
   const env = backend === "sqlite" ? "MIXTURE_MEMORY_BACKEND=sqlite " : "";
   // Upsert keyed by script path (not full-command substring): switching backends must
-  // REPLACE the existing entry, never append a duplicate or silently keep the old backend.
+  // REPLACE the wired command, never append a duplicate or silently keep the old backend.
+  // Only the matched hook's `command` string is touched — user-added fields (matcher,
+  // timeout) and sibling hooks in the same entry survive.
   const add = (event, script) => {
     const command = `${env}node ${script}`;
     const arr = (settings.hooks[event] ||= []);
-    const idx = arr.findIndex((e) => (e?.hooks || []).some((h) => typeof h?.command === "string" && h.command.endsWith(`node ${script}`)));
-    const entry = { hooks: [{ type: "command", command }] };
-    if (idx !== -1) {
-      if (JSON.stringify(arr[idx]) === JSON.stringify(entry)) return false; // already wired as-is
-      arr[idx] = entry; // backend switch
-      return true;
+    for (const e of arr) {
+      const h = (e?.hooks || []).find((h) => typeof h?.command === "string" && h.command.endsWith(`node ${script}`));
+      if (h) {
+        if (h.command === command) return false; // already wired as-is
+        h.command = command; // backend switch: update in place
+        return true;
+      }
     }
-    arr.push(entry);
+    arr.push({ hooks: [{ type: "command", command }] });
     return true;
   };
   const added = [

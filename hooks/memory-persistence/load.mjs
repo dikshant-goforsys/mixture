@@ -5,8 +5,15 @@
 
 import { readStore, sortEntries } from "./lib.mjs";
 
-const rawLimit = Number(process.env.MIXTURE_MEMORY_LOAD_LIMIT);
-const LIMIT = Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : 50; // NaN -> slice(0, NaN) = [] would silently restore nothing
+// 0 is a valid value (restore nothing, deliberately); only invalid input falls back — loudly,
+// matching clean.mjs. NaN -> slice(0, NaN) = [] would otherwise silently restore nothing.
+const rawLimit = process.env.MIXTURE_MEMORY_LOAD_LIMIT;
+let LIMIT = 50;
+if (rawLimit != null && rawLimit !== "") {
+  const n = Number(rawLimit);
+  if (Number.isFinite(n) && n >= 0) LIMIT = n;
+  else console.error(`! ignoring invalid MIXTURE_MEMORY_LOAD_LIMIT "${rawLimit}" — using default 50`);
+}
 const entries = readStore().sort(sortEntries).slice(0, LIMIT);
 
 if (entries.length === 0) process.exit(0); // nothing to restore; stay silent

@@ -131,10 +131,14 @@ function throws(code, fn, msg) {
   const b = L.createTask(l, { title: "blocker" });
   const c = L.createTask(l, { title: "dependent" });
   L.addBlocker(l, c.id, b.id);
-  throws("TRANSITION", () => L.complete(l, c.id), "completing with unresolved blockers -> TRANSITION");
+  throws("BLOCKED", () => L.complete(l, c.id), "completing with unresolved blockers -> BLOCKED (same code as checkout)");
   L.complete(l, b.id);
   L.complete(l, c.id);
   throws("TRANSITION", () => L.complete(l, c.id), "re-completing a done task -> TRANSITION");
+  // both completion paths agree on todo -> done
+  const d = L.createTask(l, { title: "D" });
+  L.setStatus(l, d.id, "done");
+  ok(l.tasks[d.id].status === "done", "setStatus todo -> done agrees with complete()");
 }
 
 // --- budget input validation: NaN must not disable the hard-stop (review must-fix 2)

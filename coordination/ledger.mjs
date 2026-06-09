@@ -18,7 +18,9 @@ const STORE = join(DIR, "ledger.json");
 
 export const STATUS = ["todo", "in_progress", "in_review", "blocked", "done", "cancelled"];
 const TRANSITIONS = {
-  todo: ["in_progress", "blocked", "cancelled"],
+  // todo -> done is legal (work finished out-of-band, e.g. a parent closed by its children);
+  // setStatus and the CLI `done` command must agree on this.
+  todo: ["in_progress", "blocked", "cancelled", "done"],
   in_progress: ["in_review", "done", "todo", "blocked", "cancelled"],
   in_review: ["in_progress", "done", "cancelled"],
   blocked: ["todo", "in_progress", "cancelled"],
@@ -168,8 +170,9 @@ export function complete(L, id, now = Date.now()) {
   // Terminal states stay terminal, and a task with unresolved blockers cannot be done.
   if (t.status === "done" || t.status === "cancelled")
     throw new LedgerError("TRANSITION", `cannot complete ${id}: ${t.status} is terminal`);
+  // BLOCKED, not TRANSITION: same condition as checkout's guard, same actionable exit code (8).
   if (blockersUnresolved(L, t))
-    throw new LedgerError("TRANSITION", `cannot complete ${id} with unresolved blockers`);
+    throw new LedgerError("BLOCKED", `cannot complete ${id} with unresolved blockers`);
   t.status = "done";
   t.assignee = null;
   t.executionRunId = null;
