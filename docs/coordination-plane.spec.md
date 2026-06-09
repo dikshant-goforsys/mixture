@@ -1,10 +1,12 @@
 # L4 Coordination plane — SPEC + status
 
-> **Status: BUILT ahead of the gate (ADR-0003).** The user opted to build the full runtime now, with the
-> premortem-#2 risk explicitly acknowledged. The **substrate is done and tested** — `coordination/ledger.mjs`
-> (every hard invariant) + `coordination/cli.mjs` + `coordination/tests.mjs` (20 passing) + the
-> `coordination-protocol` skill. The **automation layer** (cron/wake/dispatch) is wired and documented in
-> `coordination/README.md` but expected to iterate. The gate below is recorded as *not met* — we proceeded anyway.
+> **Status: BUILT and VALIDATED ahead of the gate (ADR-0003).** The user opted to build the full runtime
+> now, with the premortem-#2 risk explicitly acknowledged. The **substrate is done and tested** —
+> `coordination/ledger.mjs` (every hard invariant) + `coordination/cli.mjs` + `coordination/tests.mjs`
+> (28 passing) + the `coordination-protocol` skill. The **automation layer** (cron heartbeat + `Agent`
+> dispatch) is wired and was **validated live** — the 2-agent dispatch demo and the 20-process / 4-agent
+> high-contention test confirmed no double-work and that CONFLICT/no-retry is honored (`coordination/DEMO.md`).
+> **Deferred until a real fleet exists** (premortem #2): cross-session heartbeat persistence + a sustained soak.
 
 ## The bet that makes L4 cheap
 Because Mixture is pinned to **Claude Code**, paperclip's bespoke control-plane primitives map onto

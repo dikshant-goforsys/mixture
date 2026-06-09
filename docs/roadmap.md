@@ -31,8 +31,14 @@ next begins. **You do not skip ahead to L4.**
 - [x] 20-case invariant test suite wired into CI
 - [x] Typed human-in-the-loop gates (idempotent, revision-bound) + cross-process lock (28 tests)
 - [x] Live dispatch demo (2 concurrent agents) + high-contention test (20 procs / 4 agents) — `coordination/DEMO.md`
-- [~] Automation layer (cron/ScheduleWakeup heartbeat, dispatch via Agent) — wired + live cron `0d53ff81`, **iterating**
-- [ ] Remaining fleet-gate items: sustained multi-heartbeat soak; cross-session heartbeat persistence
+- [x] Automation layer: dispatch via `Agent` (proven in the demo) + heartbeat via cron (`0d53ff81`)
+
+**Phase 3 complete and validated.** L4's correctness (no double-work, no-retry, auto-resume, budget,
+liveness) is exercised live, not just specified.
+
+### Deferred — only pursue when a real fleet exists (premortem #2 / ADR-0003 tripwire)
+- [ ] Cross-session heartbeat persistence (current cron is session-only)
+- [ ] Sustained multi-heartbeat soak over time
 
 ## Distribution (any time after Phase 1 is eval-backed)
 - [ ] `marketplace.json` + versioned releases

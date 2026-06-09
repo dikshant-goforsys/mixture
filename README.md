@@ -27,7 +27,7 @@ have a real fleet of agents to coordinate is the #1 documented failure mode (see
 
 - ✅ **Phase 1 (now):** L0–L2 — the kernel skill, the `write-a-skill` quality gate, exemplar skills, validation.
 - ✅ **Phase 2:** L3 — profiles, env-governed hooks (`resolve-hooks`), memory lifecycle, CI gate, ECC-derived references.
-- ⚠️ **Phase 3 (built ahead of gate — ADR-0003):** L4 — tested ledger substrate + `coordination-protocol` skill done; automation layer wired and iterating. See `coordination/README.md`.
+- ✅ **Phase 3 (built ahead of gate — ADR-0003):** L4 — tested ledger substrate (28 invariant tests) + `coordination-protocol` skill, validated live by the 2-agent dispatch demo and the 20-process / 4-agent high-contention test (no double-work, CONFLICT/no-retry honored). See `coordination/README.md` + `coordination/DEMO.md`. _Future (only when you run a real fleet): cross-session heartbeat persistence + a sustained soak._
 
 ## Layout
 
