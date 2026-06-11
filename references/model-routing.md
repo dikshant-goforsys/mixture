@@ -22,4 +22,43 @@ where a wrong answer is expensive and saving it where it isn't.
 - **Don't down-route correctness-critical steps** to save pennies. Routing is an efficiency tool, not a
   reason to risk a wrong answer where it matters.
 
+## Model Usage Policy — file reading & context gathering
+
+To minimize token usage: **discovery is Haiku's job.** Whenever source code, configuration,
+documentation, logs, or specs need to be read, delegate the initial analysis to a Haiku-powered
+subagent (this repo ships one: `.claude/agents/context-reader.md`).
+
+The Haiku subagent is responsible for: reading files, extracting relevant context, identifying
+affected modules, summarizing findings, and producing a concise handoff report.
+
+Higher tiers (Sonnet/Opus) should NOT directly read large files unless:
+- Haiku explicitly indicates ambiguity;
+- architectural decisions are required;
+- security review is required;
+- complex reasoning is required;
+- the user explicitly requests deep analysis.
+
+### Mandatory context-collection workflow
+
+```
+Read files (Haiku) → context report → handoff summary → Sonnet/Opus planning → implementation → review
+```
+
+Before any implementation: spawn the `context-reader` subagent, have it read all relevant files and
+identify impacted modules, and wait for its structured handoff. **Only after receiving the handoff may
+implementation begin.** The handoff format:
+
+```
+### Files Read
+### Current Behavior
+### Impact Analysis
+### Risks
+### Recommended Approach
+```
+
+### Tier preference, restated
+- **Haiku for discovery** (reads, grep sweeps, summaries)
+- **Sonnet for implementation** (the workhorse)
+- **Opus for architecture/review** (where a wrong answer is costly)
+
 > For current model IDs, context windows, and pricing, use the `/claude-api` skill — don't hardcode prices here.
