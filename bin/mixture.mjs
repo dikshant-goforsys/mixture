@@ -99,22 +99,23 @@ function wireMemoryHooks(target, { dry, backend = "json" }) {
 
 // Claude Code subagents ship in .claude/agents/ and install to the project's (or, with
 // --global, the user's) .claude/agents/, where Claude Code discovers them.
-function installAgents(dest, skillsDest, { dry, force }) {
+function installAgents(dest, skillsDest, profileSkills, { dry, force }) {
   const src = join(PKG_ROOT, ".claude/agents");
   if (!existsSync(src)) { warn("no agents shipped in this package — skipped"); return; }
   if (!dry) mkdirSync(dest, { recursive: true });
+  // Skills any shipped profile knows about — an agent sharing one of these names is bound to it.
   const skillNames = new Set(
     Object.values(loadProfiles()).flatMap((p) => p.skills.map((s) => basename(s))));
   for (const f of readdirSync(src).filter((f) => f.endsWith(".md"))) {
     const d = join(dest, f);
     if (onDisk(d) && !force) { warn(`agent "${f}" already present — skipped (use --force)`); continue; }
-    if (dry) { log(`would copy agent ${f}`); continue; }
-    copyFileSync(join(src, f), d);
-    log(`copied agent ${f}`);
-    // An agent bound to a same-named skill is broken without it — warn at install time.
+    if (dry) log(`would copy agent ${f}`);
+    else { copyFileSync(join(src, f), d); log(`copied agent ${f}`); }
+    // An agent bound to a same-named skill is broken without it. Satisfied if the chosen
+    // profile installs it or it's already on disk — a check that works in dry runs too.
     const name = f.replace(/\.md$/, "");
-    if (skillNames.has(name) && !existsSync(join(skillsDest, name, "SKILL.md")))
-      warn(`agent "${name}" is bound to the "${name}" skill, which isn't installed here — use a profile that includes it`);
+    if (skillNames.has(name) && !profileSkills.has(name) && !existsSync(join(skillsDest, name, "SKILL.md")))
+      warn(`agent "${name}" is bound to the "${name}" skill, which this profile doesn't install — use a profile that includes it`);
   }
 }
 
@@ -156,7 +157,8 @@ function install() {
     log("L4 ready: node .mixture/framework/coordination/cli.mjs create --title \"…\"  (set MIXTURE_COORD_DIR)");
   }
   if (has("--with-agents"))
-    installAgents(global ? join(homedir(), ".claude/agents") : join(target, ".claude/agents"), skillsDest, { dry, force });
+    installAgents(global ? join(homedir(), ".claude/agents") : join(target, ".claude/agents"), skillsDest,
+      new Set(skillPaths.map((s) => basename(s))), { dry, force });
   if (dry) {
     log("would copy guide -> .mixture/how-to-use.md");
   } else {

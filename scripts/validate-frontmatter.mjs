@@ -68,7 +68,7 @@ for await (const file of walk(SKILLS_DIR)) {
 // otherwise ship silently — same premortem #3 logic, smaller contract.
 const AGENTS_DIR = join(".claude", "agents");
 // Aliases, plain model ids, and platform forms (Vertex `claude-…@date`, Bedrock `us.anthropic.claude-…-v1:0`).
-const MODEL_RE = /^(haiku|sonnet|opus|inherit|(?:[a-z]{2}\.)?(?:anthropic\.)?claude-[a-z0-9.@:[\]-]+)$/;
+const MODEL_RE = /^(haiku|sonnet|opus|inherit|(?:[a-z]{2,6}\.)?(?:anthropic\.)?claude-[a-z0-9.@:[\]-]+)$/;
 let agentFiles = [];
 try { agentFiles = (await readdir(AGENTS_DIR)).filter((f) => f.endsWith(".md")); } catch { /* no agents dir */ }
 for (const f of agentFiles) {
