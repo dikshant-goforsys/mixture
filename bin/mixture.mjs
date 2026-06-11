@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Mixture installer CLI. Brings the framework into a consumer project.
 //   npx mixture install [--profile dev] [--target .] [--global] [--link]
-//                       [--with-memory] [--with-coordination] [--force] [--dry-run]
+//                       [--with-memory] [--with-coordination] [--with-agents] [--force] [--dry-run]
 //   npx mixture list | doctor | guide | help
 //
 // Consumer layout (NOT the repo's authoring layout):
@@ -97,19 +97,24 @@ function wireMemoryHooks(target, { dry, backend = "json" }) {
   log(`wired ${added} memory hook(s) into .claude/settings.json${added ? " (backup: settings.json.bak)" : ""}`);
 }
 
-// Claude Code project subagents ship in .claude/agents/ and install to the same path in the
-// consumer project (where Claude Code discovers them).
-function installAgents(target, { dry, force }) {
+// Claude Code subagents ship in .claude/agents/ and install to the project's (or, with
+// --global, the user's) .claude/agents/, where Claude Code discovers them.
+function installAgents(dest, skillsDest, { dry, force }) {
   const src = join(PKG_ROOT, ".claude/agents");
   if (!existsSync(src)) { warn("no agents shipped in this package — skipped"); return; }
-  const dest = join(target, ".claude/agents");
   if (!dry) mkdirSync(dest, { recursive: true });
+  const skillNames = new Set(
+    Object.values(loadProfiles()).flatMap((p) => p.skills.map((s) => basename(s))));
   for (const f of readdirSync(src).filter((f) => f.endsWith(".md"))) {
     const d = join(dest, f);
     if (onDisk(d) && !force) { warn(`agent "${f}" already present — skipped (use --force)`); continue; }
     if (dry) { log(`would copy agent ${f}`); continue; }
     copyFileSync(join(src, f), d);
     log(`copied agent ${f}`);
+    // An agent bound to a same-named skill is broken without it — warn at install time.
+    const name = f.replace(/\.md$/, "");
+    if (skillNames.has(name) && !existsSync(join(skillsDest, name, "SKILL.md")))
+      warn(`agent "${name}" is bound to the "${name}" skill, which isn't installed here — use a profile that includes it`);
   }
 }
 
@@ -150,7 +155,8 @@ function install() {
     copyDir(join(PKG_ROOT, "coordination"), join(target, ".mixture/framework/coordination"), { dry, force });
     log("L4 ready: node .mixture/framework/coordination/cli.mjs create --title \"…\"  (set MIXTURE_COORD_DIR)");
   }
-  if (has("--with-agents")) installAgents(target, { dry, force });
+  if (has("--with-agents"))
+    installAgents(global ? join(homedir(), ".claude/agents") : join(target, ".claude/agents"), skillsDest, { dry, force });
   if (dry) {
     log("would copy guide -> .mixture/how-to-use.md");
   } else {
@@ -171,7 +177,7 @@ function list() {
     for (const s of p.skills) console.log(`  ${" ".repeat(13)}  · ${basename(s)}`);
     console.log("");
   }
-  console.log("  install: npx mixture-skills install --profile <name> [--with-memory] [--with-coordination]\n");
+  console.log("  install: npx mixture-skills install --profile <name> [--with-memory] [--with-coordination] [--with-agents]\n");
 }
 
 function doctor() {
@@ -191,8 +197,13 @@ function doctor() {
   }
   const mem = existsSync(join(target, ".mixture/framework/memory/load.mjs"));
   const coord = existsSync(join(target, ".mixture/framework/coordination/cli.mjs"));
+  // Count only agents this package ships, not user-authored ones in the same directory.
   let agents = 0;
-  try { agents = readdirSync(join(target, ".claude/agents")).filter((f) => f.endsWith(".md")).length; } catch { /* none */ }
+  try {
+    const agentsDest = global ? join(homedir(), ".claude/agents") : join(target, ".claude/agents");
+    agents = readdirSync(join(PKG_ROOT, ".claude/agents"))
+      .filter((f) => f.endsWith(".md") && existsSync(join(agentsDest, f))).length;
+  } catch { /* none shipped or none installed */ }
   console.log(`\n  ${installed} skill(s) installed · memory: ${mem ? "yes" : "no"} · coordination: ${coord ? "yes" : "no"} · agents: ${agents}\n`);
 }
 
@@ -220,7 +231,7 @@ install options:
   --with-memory         install the session-memory runtime + wire its hooks
   --memory-backend <b>  json (default) or sqlite (zero-dep, needs Node >=22.13 on the consumer)
   --with-coordination   install the L4 task-ledger runtime + the coordination-protocol skill
-  --with-agents         install shipped Claude Code subagents (context-reader, mobile-rn-qa) into .claude/agents
+  --with-agents         install the shipped Claude Code subagents into .claude/agents (~ with --global)
   --force               overwrite skills/runtimes that already exist
   --dry-run             print actions, change nothing
 

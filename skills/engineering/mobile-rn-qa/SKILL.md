@@ -14,8 +14,10 @@ not here.)
 ## Preflight (always first)
 
 1. **MCPs loaded?** ToolSearch for `maestro`, `rn-devtools`, `native-devtools` tools. If absent,
-   stop and tell the user how to add them (`claude mcp add maestro -- npx -y maestro-mcp`, same
-   pattern for `react-native-ai-debugger` and `native-devtools-mcp`) and restart the session.
+   stop and tell the user how to add them, then restart the session. Maestro's MCP server ships
+   inside the Maestro CLI itself: `claude mcp add maestro -- maestro mcp` (do NOT `npx maestro-mcp`
+   — that npm name is an unrelated placeholder). The others: `claude mcp add rn-devtools -- npx -y
+   react-native-ai-debugger` and `claude mcp add native-devtools -- npx -y native-devtools-mcp`.
 2. **Device + CLI:** `adb devices` (exactly one entry in state `device`), `maestro --version`.
    Zero or multiple devices → stop and report; never guess which device you own.
 3. **Metro:** rn-devtools needs a running Metro debug build. On a release build, skip the

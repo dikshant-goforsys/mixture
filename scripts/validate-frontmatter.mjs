@@ -67,7 +67,8 @@ for await (const file of walk(SKILLS_DIR)) {
 // "Use when" rule, no directory layout), but a typo'd model or missing description would
 // otherwise ship silently — same premortem #3 logic, smaller contract.
 const AGENTS_DIR = join(".claude", "agents");
-const MODEL_RE = /^(haiku|sonnet|opus|inherit|claude-[a-z0-9.[\]-]+)$/;
+// Aliases, plain model ids, and platform forms (Vertex `claude-…@date`, Bedrock `us.anthropic.claude-…-v1:0`).
+const MODEL_RE = /^(haiku|sonnet|opus|inherit|(?:[a-z]{2}\.)?(?:anthropic\.)?claude-[a-z0-9.@:[\]-]+)$/;
 let agentFiles = [];
 try { agentFiles = (await readdir(AGENTS_DIR)).filter((f) => f.endsWith(".md")); } catch { /* no agents dir */ }
 for (const f of agentFiles) {
@@ -78,6 +79,8 @@ for (const f of agentFiles) {
   else if (fm.name !== basename(f, ".md"))
     errors.push(`${p}: 'name' ("${fm.name}") must match filename ("${basename(f, ".md")}")`);
   if (!fm.description) errors.push(`${p}: missing 'description' (the routing contract)`);
+  else if (fm.description.length > MAX_DESC)
+    errors.push(`${p}: description ${fm.description.length} chars > ${MAX_DESC}`);
   if (!fm.model) errors.push(`${p}: missing 'model' (haiku|sonnet|opus|inherit or a claude-* id)`);
   else if (!MODEL_RE.test(fm.model))
     errors.push(`${p}: unknown 'model' "${fm.model}" (expected haiku|sonnet|opus|inherit or a claude-* id)`);

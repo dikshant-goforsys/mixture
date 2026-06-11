@@ -79,9 +79,19 @@ if (plugin) {
   }
 
   // Shipped agents (plugin.json agents[]) must exist on disk — same HARD rule as skills.
-  for (const a of (plugin.agents || []).map(norm)) {
+  const shippedAgents = new Set((plugin.agents || []).map(norm));
+  for (const a of shippedAgents) {
     if (!existsSync(a)) hard.push(`shipped agent missing on disk: ${a}`);
   }
+  // Reverse direction (SOFT, like the skill orphan check): an agent on disk that isn't in
+  // agents[] still ships via files[] and installs via --with-agents — register it or remove it.
+  try {
+    for (const f of readdirSync(join(".claude", "agents"))) {
+      if (!f.endsWith(".md")) continue;
+      const p = norm(join(".claude", "agents", f));
+      if (!shippedAgents.has(p)) soft.push(`agent on disk not registered in plugin.json agents[]: ${p}`);
+    }
+  } catch { /* no agents dir */ }
 
   const shippedSet = new Set(shipped);
   for (const d of findSkillDirs("skills")) {
