@@ -63,9 +63,29 @@ for await (const file of walk(SKILLS_DIR)) {
     errors.push(`${where}: 'allowed-tools' is present but empty — remove it or list tools`);
 }
 
+// --- Agents (.claude/agents/*.md): minimal frontmatter gate. Agents aren't skills (no
+// "Use when" rule, no directory layout), but a typo'd model or missing description would
+// otherwise ship silently — same premortem #3 logic, smaller contract.
+const AGENTS_DIR = join(".claude", "agents");
+const MODEL_RE = /^(haiku|sonnet|opus|inherit|claude-[a-z0-9.[\]-]+)$/;
+let agentFiles = [];
+try { agentFiles = (await readdir(AGENTS_DIR)).filter((f) => f.endsWith(".md")); } catch { /* no agents dir */ }
+for (const f of agentFiles) {
+  const p = join(AGENTS_DIR, f);
+  const fm = parseFrontmatter(await readFile(p, "utf8"));
+  if (!fm) { errors.push(`${p}: missing YAML frontmatter`); continue; }
+  if (!fm.name) errors.push(`${p}: missing 'name'`);
+  else if (fm.name !== basename(f, ".md"))
+    errors.push(`${p}: 'name' ("${fm.name}") must match filename ("${basename(f, ".md")}")`);
+  if (!fm.description) errors.push(`${p}: missing 'description' (the routing contract)`);
+  if (!fm.model) errors.push(`${p}: missing 'model' (haiku|sonnet|opus|inherit or a claude-* id)`);
+  else if (!MODEL_RE.test(fm.model))
+    errors.push(`${p}: unknown 'model' "${fm.model}" (expected haiku|sonnet|opus|inherit or a claude-* id)`);
+}
+
 if (errors.length) {
   console.error(`✖ Mixture frontmatter validation failed (${errors.length}):`);
   for (const e of errors) console.error("  - " + e);
   process.exit(2);
 }
-console.log("✓ All SKILL.md routing contracts valid.");
+console.log(`✓ All SKILL.md routing contracts valid${agentFiles.length ? ` (+ ${agentFiles.length} agent(s))` : ""}.`);

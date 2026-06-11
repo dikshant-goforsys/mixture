@@ -26,7 +26,9 @@ where a wrong answer is expensive and saving it where it isn't.
 
 To minimize token usage: **discovery is Haiku's job.** Whenever source code, configuration,
 documentation, logs, or specs need to be read, delegate the initial analysis to a Haiku-powered
-subagent (this repo ships one: `.claude/agents/context-reader.md`).
+subagent. The package ships one — `context-reader` — installed into your project's
+`.claude/agents/` via `npx mixture-skills install --with-agents` (also registered in the plugin
+manifest's `agents` field).
 
 The Haiku subagent is responsible for: reading files, extracting relevant context, identifying
 affected modules, summarizing findings, and producing a concise handoff report.
@@ -35,18 +37,24 @@ Higher tiers (Sonnet/Opus) should NOT directly read large files unless:
 - Haiku explicitly indicates ambiguity;
 - architectural decisions are required;
 - security review is required;
+- running a code review (the reviewer must read the diff directly to cite `file:line` findings);
 - complex reasoning is required;
 - the user explicitly requests deep analysis.
+
+Skip the subagent round-trip entirely when the relevant context is already in-window or the
+change is single-file/trivial — the policy is an efficiency tool (see the heuristics above),
+not a tax on one-line fixes.
 
 ### Mandatory context-collection workflow
 
 ```
-Read files (Haiku) → context report → handoff summary → Sonnet/Opus planning → implementation → review
+Read files (Haiku) → context report → handoff summary → Sonnet/Opus planning → dev-loop (tdd → full gate → review, looped)
 ```
 
 Before any implementation: spawn the `context-reader` subagent, have it read all relevant files and
 identify impacted modules, and wait for its structured handoff. **Only after receiving the handoff may
-implementation begin.** The handoff format:
+implementation begin — and implementation then proceeds under the `dev-loop` gate** (failing test
+first, review as a binding loop), which this policy feeds, not replaces. The handoff format:
 
 ```
 ### Files Read
@@ -58,7 +66,7 @@ implementation begin.** The handoff format:
 
 ### Tier preference, restated
 - **Haiku for discovery** (reads, grep sweeps, summaries)
-- **Sonnet for implementation** (the workhorse)
-- **Opus for architecture/review** (where a wrong answer is costly)
+- **Sonnet for implementation and everyday code review** (the workhorse — see the tier table)
+- **Opus for architecture and security-critical review** (where a wrong answer is costly)
 
 > For current model IDs, context windows, and pricing, use the `/claude-api` skill — don't hardcode prices here.

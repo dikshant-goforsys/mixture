@@ -44,7 +44,7 @@ That's enough to get the **skills** (L1–L2). L3 (hooks/memory) and L4 (coordin
 | Layer | What it is | Where |
 |-------|-----------|-------|
 | **L1 Behavioral kernel** | One always-relevant coding-discipline skill | `skills/kernel/coding-behavior` |
-| **L2 Skills + authoring gate** | grill-me, diagnose, tdd, context, code-review, dev-loop, frontend-design + `write-a-skill` | `skills/engineering/*`, `skills/meta/*` |
+| **L2 Skills + authoring gate** | grill-me, diagnose, tdd, context, code-review, dev-loop, frontend-design, mobile-rn-qa + `write-a-skill` | `skills/engineering/*`, `skills/meta/*` |
 | **L3 Governance** | Install profiles, env-governed hooks, session memory, CI gate | `manifests/`, `hooks/`, `scripts/` |
 | **L4 Coordination** | Multi-agent task ledger + heartbeat runtime | `coordination/`, `skills/coordination/*` |
 
@@ -68,8 +68,13 @@ cp -r /path/to/mixture/skills/engineering/diagnose your-project/.claude/skills/
 as a Claude Code plugin (`/plugin`) if you host it in a marketplace.
 
 **Pick a subset with profiles** (`manifests/install-profiles.json`): `minimal` (kernel only), `dev` (kernel
-+ engineering), `frontend` (dev loop + shadcn/ui design system), `authoring`, `coordination`, `full`.
-Install only the skills a profile lists to keep your context budget small.
++ engineering), `frontend` (dev loop + shadcn/ui design system), `mobile` (dev loop + on-device RN QA),
+`authoring`, `coordination`, `full`. Install only the skills a profile lists to keep your context budget small.
+
+**Subagents** (`--with-agents`): the package also ships Claude Code project subagents into
+`.claude/agents/` — `context-reader` (Haiku-pinned discovery per the Model Usage Policy in
+`references/model-routing.md`) and `mobile-rn-qa` (the on-device RN QA gate, bound to the skill of
+the same name).
 
 ### Upgrading
 
@@ -101,6 +106,8 @@ Just work normally — Claude routes to a skill by its `description`. Or invoke 
   looped until the greenzone (everything green + zero must-fix findings).
 - **`frontend-design`** — distinctive, production-grade UI (no generic "AI slop" aesthetics) executed
   on the shadcn/ui system: CLI-added owned components, Radix accessibility, semantic tokens.
+- **`mobile-rn-qa`** — evidence-first QA of React Native Android builds on a physical device
+  (Maestro / rn-devtools / native-devtools MCPs); every claim cites a screenshot, log, or assertion.
 
 ---
 

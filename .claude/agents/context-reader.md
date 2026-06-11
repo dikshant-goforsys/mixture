@@ -1,6 +1,6 @@
 ---
 name: context-reader
-description: Reads files and prepares implementation handoff. Use BEFORE any implementation work — delegates discovery (reading source, config, docs, logs, specs) to the cheapest tier and returns a structured handoff report so higher-capability models never burn tokens on raw file reading.
+description: Reads files and prepares implementation handoff. The cheap discovery tier itself — reads source, config, docs, logs, and specs, identifies impacted modules, and returns a structured handoff report so higher-capability callers never burn tokens on raw file reading. Use before any implementation work.
 model: haiku
 tools: Read, Grep, Glob
 ---

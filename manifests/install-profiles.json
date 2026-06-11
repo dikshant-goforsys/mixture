@@ -28,6 +28,16 @@
         "skills/engineering/frontend-design"
       ]
     },
+    "mobile": {
+      "description": "Mobile (React Native) work: the dev loop plus on-device evidence-first QA.",
+      "skills": [
+        "skills/kernel/coding-behavior",
+        "skills/engineering/tdd",
+        "skills/engineering/code-review",
+        "skills/engineering/dev-loop",
+        "skills/engineering/mobile-rn-qa"
+      ]
+    },
     "authoring": {
       "description": "For people extending Mixture itself.",
       "skills": [
@@ -53,6 +63,7 @@
         "skills/engineering/code-review",
         "skills/engineering/dev-loop",
         "skills/engineering/frontend-design",
+        "skills/engineering/mobile-rn-qa",
         "skills/meta/write-a-skill",
         "skills/coordination/coordination-protocol"
       ]

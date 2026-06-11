@@ -13,7 +13,7 @@
 
 import { fileURLToPath } from "node:url";
 import { dirname, join, basename, resolve } from "node:path";
-import { existsSync, mkdirSync, cpSync, symlinkSync, rmSync, readFileSync, writeFileSync, copyFileSync, lstatSync } from "node:fs";
+import { existsSync, mkdirSync, cpSync, symlinkSync, rmSync, readFileSync, writeFileSync, copyFileSync, lstatSync, readdirSync } from "node:fs";
 import { homedir } from "node:os";
 
 const PKG_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -97,6 +97,22 @@ function wireMemoryHooks(target, { dry, backend = "json" }) {
   log(`wired ${added} memory hook(s) into .claude/settings.json${added ? " (backup: settings.json.bak)" : ""}`);
 }
 
+// Claude Code project subagents ship in .claude/agents/ and install to the same path in the
+// consumer project (where Claude Code discovers them).
+function installAgents(target, { dry, force }) {
+  const src = join(PKG_ROOT, ".claude/agents");
+  if (!existsSync(src)) { warn("no agents shipped in this package — skipped"); return; }
+  const dest = join(target, ".claude/agents");
+  if (!dry) mkdirSync(dest, { recursive: true });
+  for (const f of readdirSync(src).filter((f) => f.endsWith(".md"))) {
+    const d = join(dest, f);
+    if (onDisk(d) && !force) { warn(`agent "${f}" already present — skipped (use --force)`); continue; }
+    if (dry) { log(`would copy agent ${f}`); continue; }
+    copyFileSync(join(src, f), d);
+    log(`copied agent ${f}`);
+  }
+}
+
 function install() {
   const profiles = loadProfiles();
   const profileName = opt("--profile", "dev");
@@ -134,6 +150,7 @@ function install() {
     copyDir(join(PKG_ROOT, "coordination"), join(target, ".mixture/framework/coordination"), { dry, force });
     log("L4 ready: node .mixture/framework/coordination/cli.mjs create --title \"…\"  (set MIXTURE_COORD_DIR)");
   }
+  if (has("--with-agents")) installAgents(target, { dry, force });
   if (dry) {
     log("would copy guide -> .mixture/how-to-use.md");
   } else {
@@ -174,7 +191,9 @@ function doctor() {
   }
   const mem = existsSync(join(target, ".mixture/framework/memory/load.mjs"));
   const coord = existsSync(join(target, ".mixture/framework/coordination/cli.mjs"));
-  console.log(`\n  ${installed} skill(s) installed · memory: ${mem ? "yes" : "no"} · coordination: ${coord ? "yes" : "no"}\n`);
+  let agents = 0;
+  try { agents = readdirSync(join(target, ".claude/agents")).filter((f) => f.endsWith(".md")).length; } catch { /* none */ }
+  console.log(`\n  ${installed} skill(s) installed · memory: ${mem ? "yes" : "no"} · coordination: ${coord ? "yes" : "no"} · agents: ${agents}\n`);
 }
 
 function guide() {
@@ -194,13 +213,14 @@ Usage:
   npx mixture-skills guide [--print]     locate or print how-to-use.md
 
 install options:
-  --profile <name>      minimal | dev (default) | frontend | authoring | coordination | full
+  --profile <name>      minimal | dev (default) | frontend | mobile | authoring | coordination | full
   --target <dir>        project to install into (default: current dir)
   --global              install skills into ~/.claude/skills (all projects)
   --link                symlink skills instead of copying (for local dev clones)
   --with-memory         install the session-memory runtime + wire its hooks
   --memory-backend <b>  json (default) or sqlite (zero-dep, needs Node >=22.13 on the consumer)
   --with-coordination   install the L4 task-ledger runtime + the coordination-protocol skill
+  --with-agents         install shipped Claude Code subagents (context-reader, mobile-rn-qa) into .claude/agents
   --force               overwrite skills/runtimes that already exist
   --dry-run             print actions, change nothing
 

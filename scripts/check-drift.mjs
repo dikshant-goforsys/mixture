@@ -78,6 +78,11 @@ if (plugin) {
     }
   }
 
+  // Shipped agents (plugin.json agents[]) must exist on disk — same HARD rule as skills.
+  for (const a of (plugin.agents || []).map(norm)) {
+    if (!existsSync(a)) hard.push(`shipped agent missing on disk: ${a}`);
+  }
+
   const shippedSet = new Set(shipped);
   for (const d of findSkillDirs("skills")) {
     const hidden = d.split("/").some((seg) => HIDDEN.has(seg));

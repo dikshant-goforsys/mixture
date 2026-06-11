@@ -55,6 +55,7 @@ CONTEXT.md                        # domain glossary (dogfood)
 ```bash
 npx mixture-skills install --profile dev                              # skills into .claude/skills
 npx mixture-skills install --profile full --with-memory --memory-backend sqlite
+npx mixture-skills install --profile mobile --with-agents             # RN device QA + project subagents
 npx mixture-skills list | doctor                                      # profiles / what's installed
 # (or pin from source: `npx github:dikshant-goforsys/mixture install …`)
 ```

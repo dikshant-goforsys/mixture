@@ -28,6 +28,7 @@
   "files": [
     "bin",
     "skills",
+    ".claude/agents",
     "scripts",
     "hooks",
     "manifests",

@@ -13,7 +13,12 @@
     "./skills/engineering/code-review",
     "./skills/engineering/frontend-design",
     "./skills/engineering/dev-loop",
+    "./skills/engineering/mobile-rn-qa",
     "./skills/coordination/coordination-protocol"
+  ],
+  "agents": [
+    "./.claude/agents/context-reader.md",
+    "./.claude/agents/mobile-rn-qa.md"
   ],
   "commands": [],
   "mcpServers": {}
